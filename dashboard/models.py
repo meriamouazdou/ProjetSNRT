@@ -3,6 +3,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from uploads.models import CSVDataSource
 
+
+
+class FichierCSV(models.Model):
+    nom = models.CharField(max_length=255)
+    fichier = models.FileField(upload_to='csv/')
+    date_import = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.nom
+
+
 class Dashboard(models.Model):
     """
     Modèle pour personnaliser les dashboards par utilisateur
