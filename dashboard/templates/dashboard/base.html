@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}SNRT Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
+    <style>
+        body { margin:0; font-family:Arial,sans-serif; }
+        header { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#222; color:#fff; }
+        .logo img { height:50px; }
+        .menu-icon { cursor:pointer; font-size:24px; }
+        .sidebar { position:fixed; top:0; right:-200px; width:200px; height:100%; background:#333; color:#fff; transition: right 0.3s; padding-top:60px; }
+        .sidebar a { display:block; padding:10px; color:#fff; text-decoration:none; }
+        .sidebar a:hover { background:#444; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" style="margin:auto;">
+            <img src="{% static 'dashboard/snrt_logo.png' %}" alt="SNRT">
+        </div>
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    </header>
+
+    <div id="sidebar" class="sidebar">
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+    </div>
+
+    <main>
+        {% block content %}
+        <!-- contenu spécifique ici -->
+        {% endblock %}
+    </main>
+
+    <script>
+        function toggleSidebar(){
+            var sidebar = document.getElementById('sidebar');
+            sidebar.style.right = (sidebar.style.right === '0px') ? '-200px' : '0px';
+        }
+    </script>
+</body>
+</html>
