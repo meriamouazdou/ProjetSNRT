@@ -1,132 +1,83 @@
-from django.db import models
-
-# Create your models here.
-# dashboard/models.py
+# dashboards/models.py
 from django.db import models
 from django.contrib.auth.models import User
-import pandas as pd
-import os
-from django.conf import settings
+from uploads.models import CSVDataSource
 
-class CSVDataSource(models.Model):
+class Dashboard(models.Model):
     """
-    Modèle pour gérer les sources de données CSV
+    Modèle pour personnaliser les dashboards par utilisateur
     """
-    CATEGORY_CHOICES = [
-        ('rh', 'Ressources Humaines'),
-        ('finance', 'Finance'),
-        ('projet', 'Gestion de Projet'),
-        ('commercial', 'Commercial'),
+    WIDGET_TYPES = [
+        ('chart_bar', 'Graphique en barres'),
+        ('chart_pie', 'Graphique en camembert'),
+        ('chart_line', 'Graphique en ligne'),
+        ('table', 'Tableau'),
+        ('metric', 'Métrique'),
+        ('list', 'Liste'),
     ]
     
-    name = models.CharField(max_length=100, verbose_name="Nom du fichier")
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, verbose_name="Catégorie")
-    csv_file = models.FileField(upload_to='csv_uploads/', verbose_name="Fichier CSV")
-    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Date d'upload")
-    is_active = models.BooleanField(default=True, verbose_name="Actif")
-    
-    class Meta:
-        verbose_name = "Source CSV"
-        verbose_name_plural = "Sources CSV"
-    
-    def __str__(self):
-        return f"{self.name} - {self.category}"
-
-class DynamicData(models.Model):
-    """
-    Modèle flexible pour stocker les données des CSV
-    """
-    source = models.ForeignKey(CSVDataSource, on_delete=models.CASCADE, related_name='data_entries')
-    row_data = models.JSONField(verbose_name="Données de la ligne")  # Stockage flexible des données
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='dashboards')
+    title = models.CharField(max_length=200, verbose_name="Titre du dashboard")
+    description = models.TextField(blank=True, null=True, verbose_name="Description")
+    is_default = models.BooleanField(default=False, verbose_name="Dashboard par défaut")
+    layout_config = models.JSONField(default=dict, verbose_name="Configuration du layout")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = "Données dynamiques"
-        verbose_name_plural = "Données dynamiques"
+        verbose_name = "Dashboard"
+        verbose_name_plural = "Dashboards"
+        ordering = ['-updated_at']
     
     def __str__(self):
-        return f"Data from {self.source.name} - Row {self.id}"
+        return f"{self.user.username} - {self.title}"
 
-class UserRole(models.Model):
+class Widget(models.Model):
     """
-    Modèle pour gérer les rôles utilisateur et leurs permissions
+    Modèle pour les widgets des dashboards
     """
-    ROLE_CHOICES = [
-        ('directeur', 'Directeur'),
-        ('chef_departement', 'Chef de Département'),
-        ('chef_projet', 'Chef de Projet'),
-        ('cs', 'CS'),
+    dashboard = models.ForeignKey(Dashboard, on_delete=models.CASCADE, related_name='widgets')
+    title = models.CharField(max_length=200, verbose_name="Titre du widget")
+    widget_type = models.CharField(max_length=20, choices=Dashboard.WIDGET_TYPES, verbose_name="Type de widget")
+    data_source = models.ForeignKey(CSVDataSource, on_delete=models.CASCADE, verbose_name="Source de données")
+    config = models.JSONField(default=dict, verbose_name="Configuration du widget")
+    position_x = models.IntegerField(default=0, verbose_name="Position X")
+    position_y = models.IntegerField(default=0, verbose_name="Position Y")
+    width = models.IntegerField(default=6, verbose_name="Largeur")
+    height = models.IntegerField(default=4, verbose_name="Hauteur")
+    is_visible = models.BooleanField(default=True, verbose_name="Visible")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Widget"
+        verbose_name_plural = "Widgets"
+        ordering = ['position_y', 'position_x']
+    
+    def __str__(self):
+        return f"{self.dashboard.title} - {self.title}"
+
+class UserPreferences(models.Model):
+    """
+    Modèle pour les préférences utilisateur
+    """
+    THEME_CHOICES = [
+        ('light', 'Clair'),
+        ('dark', 'Sombre'),
+        ('auto', 'Automatique'),
     ]
     
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_role')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, verbose_name="Rôle")
-    allowed_categories = models.JSONField(default=list, verbose_name="Catégories autorisées")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='preferences')
+    theme = models.CharField(max_length=10, choices=THEME_CHOICES, default='light', verbose_name="Thème")
+    language = models.CharField(max_length=10, default='fr', verbose_name="Langue")
+    timezone = models.CharField(max_length=50, default='Europe/Paris', verbose_name="Fuseau horaire")
+    notifications_enabled = models.BooleanField(default=True, verbose_name="Notifications activées")
+    default_dashboard = models.ForeignKey(Dashboard, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Dashboard par défaut")
+    refresh_interval = models.IntegerField(default=300, verbose_name="Intervalle de rafraîchissement (secondes)")
     
     class Meta:
-        verbose_name = "Rôle utilisateur"
-        verbose_name_plural = "Rôles utilisateur"
+        verbose_name = "Préférences utilisateur"
+        verbose_name_plural = "Préférences utilisateur"
     
     def __str__(self):
-        return f"{self.user.username} - {self.role}"
-
-# Fonctions utilitaires pour traiter les CSV
-def process_csv_file(csv_source):
-    """
-    Fonction pour traiter un fichier CSV et l'importer en base
-    """
-    try:
-        # Lire le fichier CSV avec pandas
-        df = pd.read_csv(csv_source.csv_file.path)
-        
-        # Nettoyer les données
-        df = df.dropna(how='all')  # Supprimer les lignes vides
-        df.columns = df.columns.str.strip()  # Nettoyer les noms de colonnes
-        
-        # Supprimer les anciennes données de cette source
-        DynamicData.objects.filter(source=csv_source).delete()
-        
-        # Créer les nouvelles entrées
-        data_entries = []
-        for _, row in df.iterrows():
-            # Convertir la ligne en dictionnaire
-            row_dict = row.to_dict()
-            
-            # Créer l'entrée
-            data_entry = DynamicData(
-                source=csv_source,
-                row_data=row_dict
-            )
-            data_entries.append(data_entry)
-        
-        # Sauvegarder en bulk pour optimiser les performances
-        DynamicData.objects.bulk_create(data_entries)
-        
-        return True, f"Fichier traité avec succès. {len(data_entries)} lignes importées."
-        
-    except Exception as e:
-        return False, f"Erreur lors du traitement : {str(e)}"
-
-def get_user_data(user, category=None):
-    """
-    Fonction pour récupérer les données autorisées pour un utilisateur
-    """
-    try:
-        user_role = user.user_role
-        allowed_categories = user_role.allowed_categories
-        
-        # Filtrer les sources selon les catégories autorisées
-        sources = CSVDataSource.objects.filter(
-            category__in=allowed_categories,
-            is_active=True
-        )
-        
-        if category:
-            sources = sources.filter(category=category)
-        
-        # Récupérer les données
-        data = DynamicData.objects.filter(source__in=sources)
-        
-        return data
-        
-    except UserRole.DoesNotExist:
-        return DynamicData.objects.none()
+        return f"Préférences de {self.user.username}"s
