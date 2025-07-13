@@ -1,8 +1,160 @@
 {% extends 'dashboard/base.html' %}
+{% load static %}
 
 {% block title %}Dashboard - SNRT{% endblock %}
 
 {% block content %}
-    <h1 style="text-align:center; margin-top:30px;">Bienvenue sur le Dashboard SNRT</h1>
-    <p style="text-align:center;">Ici tu pourras ajouter tes graphiques, tableaux, statistiques, etc.</p>
+<div class="container">
+    <header>
+        <div class="logo">
+            <img src="{% static 'images/snrt_logo.png' %}" alt="SNRT Logo">
+        </div>
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <a href="/dashboard/">🏠 Accueil</a>
+        <a href="/dashboard/statistics/">📊 Statistiques</a>
+        <a href="/dashboard/reports/">📈 Rapports</a>
+        <a href="/dashboard/settings/">⚙️ Paramètres</a>
+        <a href="/logout/">🚪 Déconnexion</a>
+    </div>
+
+    <main class="main-content">
+        <h1>Bienvenue sur le Dashboard SNRT</h1>
+        <p class="welcome-text">Ici tu pourras ajouter tes graphiques, tableaux, statistiques, etc.</p>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>📊 Statistiques</h3>
+                <p>Visualisez les données importantes de votre système.</p>
+                <a href="/dashboard/statistics/" class="btn">Voir les stats</a>
+            </div>
+            
+            <div class="card">
+                <h3>📈 Rapports</h3>
+                <p>Générez et consultez vos rapports détaillés.</p>
+                <a href="/dashboard/reports/" class="btn">Voir les rapports</a>
+            </div>
+            
+            <div class="card">
+                <h3>👥 Utilisateurs</h3>
+                <p>Gérez les utilisateurs et leurs permissions.</p>
+                <a href="/dashboard/users/" class="btn">Gérer les utilisateurs</a>
+            </div>
+            
+            <div class="card">
+                <h3>⚙️ Paramètres</h3>
+                <p>Configurez les paramètres de votre système.</p>
+                <a href="/dashboard/settings/" class="btn">Paramètres</a>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const currentRight = sidebar.style.right;
+        if (currentRight === '0px') {
+            sidebar.style.right = '-200px';
+        } else {
+            sidebar.style.right = '0px';
+        }
+    }
+</script>
+
+<style>
+    .container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .main-content {
+        padding: 20px;
+        margin-top: 70px;
+    }
+    
+    h1 {
+        text-align: center;
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .welcome-text {
+        text-align: center;
+        color: #f0f0f0;
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .card h3 {
+        color: white;
+        margin-bottom: 15px;
+        font-size: 1.5rem;
+    }
+    
+    .card p {
+        color: #e0e0e0;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 12px 25px;
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+            padding: 0 10px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+        }
+        
+        .card {
+            padding: 20px;
+        }
+    }
+</style>
 {% endblock %}
