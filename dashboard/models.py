@@ -80,4 +80,4 @@ class UserPreferences(models.Model):
         verbose_name_plural = "Préférences utilisateur"
     
     def __str__(self):
-        return f"Préférences de {self.user.username}"s
+        return f"Préférences de {self.user.username}"
