@@ -1,54 +1,54 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}Dashboard Directeur - SNRT{% endblock %}
+{% block title %}Dashboard Chef de Projet - SNRT{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="sidebar" id="sidebar">
         <a href="/dashboard/">🏠 Accueil</a>
-        <a href="/dashboard/statistics/">📊 Statistiques</a>
-        <a href="/dashboard/reports/">📈 Rapports</a>
-        <a href="/dashboard/settings/">⚙️ Paramètres</a>
+        <a href="/dashboard/projects/">🎯 Mes Projets</a>
+        <a href="/dashboard/team/">👥 Mon Équipe</a>
+        <a href="/dashboard/planning/">📅 Planning</a>
         <a href="/logout/">🚪 Déconnexion</a>
     </div>
 
     <main class="main-content">
-        <h1>Dashboard Directeur SNRT</h1>
-        <p class="welcome-text">Vue d'ensemble des performances et données stratégiques</p>
+        <h1>Dashboard Chef de Projet SNRT</h1>
+        <p class="welcome-text">Pilotage et supervision de vos projets et équipes</p>
         
         <!-- KPI Cards -->
         <div class="kpi-container">
             <div class="kpi-card">
-                <div class="kpi-icon">👥</div>
-                <div class="kpi-content">
-                    <h3>1,247</h3>
-                    <p>Employés Total</p>
-                    <span class="kpi-trend positive">+3.2%</span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon">📺</div>
-                <div class="kpi-content">
-                    <h3>89.5%</h3>
-                    <p>Taux d'audience</p>
-                    <span class="kpi-trend positive">+5.1%</span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon">💰</div>
-                <div class="kpi-content">
-                    <h3>450M DH</h3>
-                    <p>Budget 2024</p>
-                    <span class="kpi-trend neutral">Budget utilisé: 67%</span>
-                </div>
-            </div>
-            <div class="kpi-card">
                 <div class="kpi-icon">🎯</div>
                 <div class="kpi-content">
-                    <h3>92%</h3>
-                    <p>Objectifs atteints</p>
-                    <span class="kpi-trend positive">+8.3%</span>
+                    <h3>7</h3>
+                    <p>Projets Actifs</p>
+                    <span class="kpi-trend positive">+2 ce mois</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">✅</div>
+                <div class="kpi-content">
+                    <h3>142</h3>
+                    <p>Tâches Terminées</p>
+                    <span class="kpi-trend positive">+15 cette semaine</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">⏰</div>
+                <div class="kpi-content">
+                    <h3>28</h3>
+                    <p>Tâches En Cours</p>
+                    <span class="kpi-trend neutral">Dans les délais</span>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">🚨</div>
+                <div class="kpi-content">
+                    <h3>3</h3>
+                    <p>En Retard</p>
+                    <span class="kpi-trend negative">Action requise</span>
                 </div>
             </div>
         </div>
@@ -57,23 +57,21 @@
         <div class="filter-container">
             <h2>🔍 Filtres</h2>
             
-            <!-- Filtres par département -->
+            <!-- Filtres par projet -->
             <div class="filter-section">
-                <h3>📍 Filtrer par Département</h3>
+                <h3>🎯 Filtrer par Projet</h3>
                 <div class="dropdown-container">
-                    <button class="dropdown-btn" id="dept-dropdown-btn">
-                        <span id="dept-selected">Tous les départements</span>
+                    <button class="dropdown-btn" id="project-dropdown-btn">
+                        <span id="project-selected">Tous les projets</span>
                         <span class="dropdown-arrow">▼</span>
                     </button>
-                    <div class="dropdown-menu" id="dept-dropdown-menu">
+                    <div class="dropdown-menu" id="project-dropdown-menu">
                         <div class="dropdown-item active" data-filter="all">Tous</div>
-                        <div class="dropdown-item" data-filter="eri">ERI</div>
-                        <div class="dropdown-item" data-filter="rabat">Rabat</div>
-                        <div class="dropdown-item" data-filter="casablanca">Casablanca</div>
-                        <div class="dropdown-item" data-filter="fes">Fès</div>
-                        <div class="dropdown-item" data-filter="marrakech">Marrakech</div>
-                        <div class="dropdown-item" data-filter="tanger">Tanger</div>
-                        <div class="dropdown-item" data-filter="agadir">Agadir</div>
+                        <div class="dropdown-item" data-filter="al-aoula">Al Aoula Analytics</div>
+                        <div class="dropdown-item" data-filter="arryadia">Arryadia Sports</div>
+                        <div class="dropdown-item" data-filter="arrabia">Arrabia Culture</div>
+                        <div class="dropdown-item" data-filter="digital">Digital Platform</div>
+                        <div class="dropdown-item" data-filter="maintenance">Maintenance</div>
                     </div>
                 </div>
             </div>
@@ -100,57 +98,108 @@
 
         <!-- Zone d'affichage des diagrammes -->
         <div class="diagrams-container">
-            <h2>📈 Tableaux de Bord</h2>
+            <h2>📈 Tableaux de Bord Projets</h2>
             <div class="diagrams-grid" id="diagrams-grid">
                 
-                <!-- Graphique des revenus par mois -->
-                <div class="chart-card" data-department="all" data-type="line">
-                    <h4>💰 Revenus Mensuels (2024)</h4>
-                    <canvas id="revenueChart"></canvas>
-                </div>
-
-                <!-- Graphique des audiences par chaîne -->
+                <!-- Progression des projets -->
                 <div class="chart-card" data-department="all" data-type="bar">
-                    <h4>📺 Audience par Chaîne</h4>
-                    <canvas id="audienceChart"></canvas>
+                    <h4>🎯 Progression des Projets</h4>
+                    <canvas id="projectProgressChart"></canvas>
                 </div>
 
-                <!-- Répartition du budget -->
-                <div class="chart-card" data-department="all" data-type="pie">
-                    <h4>💸 Répartition du Budget</h4>
+                <!-- Répartition des tâches par statut -->
+                <div class="chart-card" data-department="all" data-type="doughnut">
+                    <h4>✅ Répartition des Tâches</h4>
+                    <canvas id="tasksStatusChart"></canvas>
+                </div>
+
+                <!-- Timeline des projets -->
+                <div class="chart-card" data-department="all" data-type="line">
+                    <h4>📅 Timeline des Livraisons</h4>
+                    <canvas id="timelineChart"></canvas>
+                </div>
+
+                <!-- Charge de travail par équipe -->
+                <div class="chart-card" data-department="all" data-type="radar">
+                    <h4>👥 Charge de Travail Équipes</h4>
+                    <canvas id="workloadChart"></canvas>
+                </div>
+
+                <!-- Performance Al Aoula -->
+                <div class="chart-card" data-department="al-aoula" data-type="line">
+                    <h4>📊 Performance Al Aoula Analytics</h4>
+                    <canvas id="alAoulaChart"></canvas>
+                </div>
+
+                <!-- Budget vs Dépenses -->
+                <div class="chart-card" data-department="all" data-type="bar">
+                    <h4>💰 Budget vs Dépenses</h4>
                     <canvas id="budgetChart"></canvas>
                 </div>
 
-                <!-- Employés par département -->
+                <!-- Projet Arryadia Sports -->
+                <div class="chart-card" data-department="arryadia" data-type="pie">
+                    <h4>⚽ Projet Arryadia - Répartition</h4>
+                    <canvas id="arryradiaChart"></canvas>
+                </div>
+
+                <!-- Risques des projets -->
                 <div class="chart-card" data-department="all" data-type="doughnut">
-                    <h4>👥 Employés par Département</h4>
-                    <canvas id="employeesChart"></canvas>
+                    <h4>⚠️ Niveau de Risques</h4>
+                    <canvas id="risksChart"></canvas>
                 </div>
 
-                <!-- Performance par région -->
-                <div class="chart-card" data-department="rabat" data-type="bar">
-                    <h4>🏢 Performance Régionale - Rabat</h4>
-                    <canvas id="rabatChart"></canvas>
-                </div>
+            </div>
+        </div>
 
-                <!-- Objectifs vs Réalisations -->
-                <div class="chart-card" data-department="all" data-type="radar">
-                    <h4>🎯 Objectifs vs Réalisations</h4>
-                    <canvas id="objectifsChart"></canvas>
+        <!-- Tâches urgentes -->
+        <div class="urgent-tasks">
+            <h2>🔥 Tâches Urgentes à Superviser</h2>
+            <div class="tasks-list">
+                <div class="task-item priority-high">
+                    <div class="task-status">🔴</div>
+                    <div class="task-content">
+                        <h4>Validation finale Al Aoula Analytics</h4>
+                        <p>Échéance: Aujourd'hui 18:00 - Chef d'équipe: Ahmed</p>
+                        <span class="task-project">Projet: Al Aoula Analytics - Phase 3</span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-small btn-primary">Superviser</button>
+                    </div>
                 </div>
-
-                <!-- Évolution audience Casablanca -->
-                <div class="chart-card" data-department="casablanca" data-type="line">
-                    <h4>📈 Évolution Audience - Casablanca</h4>
-                    <canvas id="casablancaChart"></canvas>
+                <div class="task-item priority-high">
+                    <div class="task-status">🔴</div>
+                    <div class="task-content">
+                        <h4>Révision budget Arryadia Sports</h4>
+                        <p>Échéance: Demain 10:00 - Équipe Finance</p>
+                        <span class="task-project">Projet: Arryadia Sports Platform</span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-small btn-danger">Urgent</button>
+                    </div>
                 </div>
-
-                <!-- Productions par type -->
-                <div class="chart-card" data-department="all" data-type="pie">
-                    <h4>🎬 Productions par Type</h4>
-                    <canvas id="productionsChart"></canvas>
+                <div class="task-item priority-medium">
+                    <div class="task-status">🟡</div>
+                    <div class="task-content">
+                        <h4>Réunion équipe Arrabia Culture</h4>
+                        <p>Échéance: Demain 14:00 - Équipe Développement</p>
+                        <span class="task-project">Projet: Arrabia Cultural Content</span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-small btn-secondary">Planifier</button>
+                    </div>
                 </div>
-
+                <div class="task-item priority-medium">
+                    <div class="task-status">🟡</div>
+                    <div class="task-content">
+                        <h4>Validation specs Digital Platform</h4>
+                        <p>Échéance: Jeudi 16:00 - Équipe Tech</p>
+                        <span class="task-project">Projet: Digital Platform V2</span>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-small btn-warning">Revoir</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -160,68 +209,69 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    // =================== DONNÉES FICTIVES ===================
-    const fictitiousData = {
-        revenues: {
-            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
-            data: [35, 38, 42, 39, 45, 48, 52, 49, 47, 51, 54, 58]
+    // =================== DONNÉES FICTIVES CHEF DE PROJET ===================
+    const projectData = {
+        projectProgress: {
+            labels: ['Al Aoula Analytics', 'Arryadia Sports', 'Arrabia Culture', 'Digital Platform', 'Maintenance'],
+            data: [85, 72, 68, 45, 92]
         },
-        audience: {
-            labels: ['Al Aoula', 'Arryadia', 'Arrabia', 'Al Maghribia', 'Assadissa', 'Aflam TV'],
-            data: [28.5, 22.3, 18.7, 15.2, 8.9, 6.4]
+        tasksStatus: {
+            labels: ['Terminées', 'En Cours', 'En Attente', 'En Retard'],
+            data: [142, 28, 15, 3]
+        },
+        timeline: {
+            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6'],
+            data: [2, 1, 3, 2, 1, 2]
+        },
+        workload: {
+            labels: ['Équipe Dev', 'Équipe Design', 'Équipe QA', 'Équipe Analytics', 'Équipe Content'],
+            data: [85, 70, 60, 90, 75],
+            capacity: [90, 80, 70, 95, 80]
+        },
+        alAoulaPerformance: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+            data: [65, 72, 78, 82, 85, 85]
         },
         budget: {
-            labels: ['Production', 'Technique', 'RH', 'Marketing', 'Administration', 'Infrastructure'],
-            data: [35, 25, 20, 10, 5, 5]
+            labels: ['Al Aoula', 'Arryadia', 'Arrabia', 'Digital', 'Maintenance'],
+            allocated: [120, 95, 80, 150, 45],
+            spent: [102, 88, 65, 98, 43]
         },
-        employees: {
-            labels: ['Production', 'Technique', 'Administration', 'Commercial', 'Juridique'],
-            data: [425, 387, 198, 156, 81]
+        arryadia: {
+            labels: ['Développement', 'Design', 'Tests', 'Déploiement'],
+            data: [40, 25, 20, 15]
         },
-        regional: {
-            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-            data: [85, 92, 88, 94]
-        },
-        objectives: {
-            labels: ['Audience', 'Budget', 'Innovation', 'Qualité', 'RH', 'Digital'],
-            data: [92, 87, 78, 95, 89, 82],
-            targets: [90, 85, 80, 90, 85, 75]
-        },
-        casablancaTrend: {
-            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
-            data: [15.2, 16.8, 17.3, 18.1, 17.9, 18.7]
-        },
-        productions: {
-            labels: ['Informatif', 'Divertissement', 'Sport', 'Culturel', 'Jeunesse', 'Documentaire'],
-            data: [30, 25, 20, 12, 8, 5]
+        risks: {
+            labels: ['Faible', 'Moyen', 'Élevé', 'Critique'],
+            data: [4, 2, 1, 0]
         }
     };
 
-    // =================== CONFIGURATION DES COULEURS ===================
-    const colors = {
-        primary: '#667eea',
-        secondary: '#764ba2',
+    // =================== CONFIGURATION DES COULEURS CHEF DE PROJET ===================
+    const cpColors = {
+        primary: '#f97316',
+        secondary: '#ea580c',
         success: '#10b981',
         warning: '#f59e0b',
         danger: '#ef4444',
         info: '#06b6d4',
         purple: '#8b5cf6',
-        pink: '#ec4899',
-        orange: '#f97316',
+        green: '#22c55e',
+        blue: '#3b82f6',
         teal: '#14b8a6'
     };
 
-    const gradients = {
-        blue: ['#667eea', '#764ba2'],
-        green: ['#10b981', '#059669'],
+    const cpGradients = {
         orange: ['#f97316', '#ea580c'],
+        green: ['#10b981', '#059669'],
+        blue: ['#3b82f6', '#1d4ed8'],
         purple: ['#8b5cf6', '#7c3aed'],
-        pink: ['#ec4899', '#db2777']
+        teal: ['#14b8a6', '#0f766e']
     };
 
     // =================== FONCTIONS UTILITAIRES ===================
-    function createGradient(ctx, colors) {
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    function createCPGradient(ctx, colors) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 350);
         gradient.addColorStop(0, colors[0]);
         gradient.addColorStop(1, colors[1]);
         return gradient;
@@ -229,21 +279,85 @@
 
     // =================== CRÉATION DES GRAPHIQUES ===================
     
-    // 1. Revenus mensuels
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
+    // 1. Progression des projets
+    const progressCtx = document.getElementById('projectProgressChart').getContext('2d');
+    new Chart(progressCtx, {
+        type: 'bar',
+        data: {
+            labels: projectData.projectProgress.labels,
+            datasets: [{
+                label: 'Progression (%)',
+                data: projectData.projectProgress.data,
+                backgroundColor: createCPGradient(progressCtx, cpGradients.orange),
+                borderRadius: 8,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: '#fff' }
+                },
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: '#fff' }
+                }
+            }
+        }
+    });
+
+    // 2. Statut des tâches
+    const tasksCtx = document.getElementById('tasksStatusChart').getContext('2d');
+    new Chart(tasksCtx, {
+        type: 'doughnut',
+        data: {
+            labels: projectData.tasksStatus.labels,
+            datasets: [{
+                data: projectData.tasksStatus.data,
+                backgroundColor: [
+                    cpColors.success, cpColors.warning, 
+                    cpColors.info, cpColors.danger
+                ],
+                borderWidth: 3,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#fff', padding: 15 }
+                }
+            }
+        }
+    });
+
+    // 3. Timeline des livraisons
+    const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+    new Chart(timelineCtx, {
         type: 'line',
         data: {
-            labels: fictitiousData.revenues.labels,
+            labels: projectData.timeline.labels,
             datasets: [{
-                label: 'Revenus (Millions DH)',
-                data: fictitiousData.revenues.data,
-                borderColor: colors.primary,
-                backgroundColor: createGradient(revenueCtx, gradients.blue),
+                label: 'Livraisons prévues',
+                data: projectData.timeline.data,
+                borderColor: cpColors.primary,
+                backgroundColor: createCPGradient(timelineCtx, cpGradients.orange),
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
-                pointBackgroundColor: colors.primary,
+                pointBackgroundColor: cpColors.primary,
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
                 pointRadius: 6
@@ -269,158 +383,30 @@
         }
     });
 
-    // 2. Audience par chaîne
-    const audienceCtx = document.getElementById('audienceChart').getContext('2d');
-    new Chart(audienceCtx, {
-        type: 'bar',
-        data: {
-            labels: fictitiousData.audience.labels,
-            datasets: [{
-                label: 'Part d\'audience (%)',
-                data: fictitiousData.audience.data,
-                backgroundColor: [
-                    colors.primary, colors.success, colors.warning, 
-                    colors.danger, colors.info, colors.purple
-                ],
-                borderRadius: 8,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#fff' }
-                },
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#fff' }
-                }
-            }
-        }
-    });
-
-    // 3. Répartition du budget
-    const budgetCtx = document.getElementById('budgetChart').getContext('2d');
-    new Chart(budgetCtx, {
-        type: 'pie',
-        data: {
-            labels: fictitiousData.budget.labels,
-            datasets: [{
-                data: fictitiousData.budget.data,
-                backgroundColor: [
-                    colors.primary, colors.success, colors.warning,
-                    colors.danger, colors.info, colors.purple
-                ],
-                borderWidth: 2,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#fff', padding: 20 }
-                }
-            }
-        }
-    });
-
-    // 4. Employés par département
-    const employeesCtx = document.getElementById('employeesChart').getContext('2d');
-    new Chart(employeesCtx, {
-        type: 'doughnut',
-        data: {
-            labels: fictitiousData.employees.labels,
-            datasets: [{
-                data: fictitiousData.employees.data,
-                backgroundColor: [
-                    colors.primary, colors.success, colors.warning,
-                    colors.danger, colors.info
-                ],
-                borderWidth: 3,
-                borderColor: '#fff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '60%',
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#fff', padding: 15 }
-                }
-            }
-        }
-    });
-
-    // 5. Performance Rabat
-    const rabatCtx = document.getElementById('rabatChart').getContext('2d');
-    new Chart(rabatCtx, {
-        type: 'bar',
-        data: {
-            labels: fictitiousData.regional.labels,
-            datasets: [{
-                label: 'Performance (%)',
-                data: fictitiousData.regional.data,
-                backgroundColor: createGradient(rabatCtx, gradients.green),
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#fff' }
-                },
-                x: {
-                    grid: { color: 'rgba(255,255,255,0.1)' },
-                    ticks: { color: '#fff' }
-                }
-            }
-        }
-    });
-
-    // 6. Objectifs vs Réalisations
-    const objectifsCtx = document.getElementById('objectifsChart').getContext('2d');
-    new Chart(objectifsCtx, {
+    // 4. Charge de travail équipes
+    const workloadCtx = document.getElementById('workloadChart').getContext('2d');
+    new Chart(workloadCtx, {
         type: 'radar',
         data: {
-            labels: fictitiousData.objectives.labels,
+            labels: projectData.workload.labels,
             datasets: [
                 {
-                    label: 'Réalisé',
-                    data: fictitiousData.objectives.data,
-                    backgroundColor: 'rgba(102, 126, 234, 0.3)',
-                    borderColor: colors.primary,
+                    label: 'Charge Actuelle',
+                    data: projectData.workload.data,
+                    backgroundColor: 'rgba(249, 115, 22, 0.3)',
+                    borderColor: cpColors.primary,
                     borderWidth: 2,
-                    pointBackgroundColor: colors.primary,
+                    pointBackgroundColor: cpColors.primary,
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2
                 },
                 {
-                    label: 'Objectif',
-                    data: fictitiousData.objectives.targets,
+                    label: 'Capacité Max',
+                    data: projectData.workload.capacity,
                     backgroundColor: 'rgba(16, 185, 129, 0.3)',
-                    borderColor: colors.success,
+                    borderColor: cpColors.success,
                     borderWidth: 2,
-                    pointBackgroundColor: colors.success,
+                    pointBackgroundColor: cpColors.success,
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2
                 }
@@ -447,21 +433,21 @@
         }
     });
 
-    // 7. Évolution Casablanca
-    const casablancaCtx = document.getElementById('casablancaChart').getContext('2d');
-    new Chart(casablancaCtx, {
+    // 5. Performance Al Aoula
+    const alAoulaCtx = document.getElementById('alAoulaChart').getContext('2d');
+    new Chart(alAoulaCtx, {
         type: 'line',
         data: {
-            labels: fictitiousData.casablancaTrend.labels,
+            labels: projectData.alAoulaPerformance.labels,
             datasets: [{
-                label: 'Audience (%)',
-                data: fictitiousData.casablancaTrend.data,
-                borderColor: colors.orange,
-                backgroundColor: createGradient(casablancaCtx, gradients.orange),
+                label: 'Performance (%)',
+                data: projectData.alAoulaPerformance.data,
+                borderColor: cpColors.blue,
+                backgroundColor: createCPGradient(alAoulaCtx, cpGradients.blue),
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
-                pointBackgroundColor: colors.orange,
+                pointBackgroundColor: cpColors.blue,
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
                 pointRadius: 6
@@ -472,6 +458,50 @@
             maintainAspectRatio: false,
             plugins: {
                 legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: '#fff' }
+                },
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    ticks: { color: '#fff' }
+                }
+            }
+        }
+    });
+
+    // 6. Budget vs Dépenses
+    const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+    new Chart(budgetCtx, {
+        type: 'bar',
+        data: {
+            labels: projectData.budget.labels,
+            datasets: [
+                {
+                    label: 'Budget Alloué (K DH)',
+                    data: projectData.budget.allocated,
+                    backgroundColor: cpColors.info,
+                    borderRadius: 6
+                },
+                {
+                    label: 'Dépensé (K DH)',
+                    data: projectData.budget.spent,
+                    backgroundColor: cpColors.primary,
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#fff' }
+                }
             },
             scales: {
                 y: {
@@ -487,17 +517,17 @@
         }
     });
 
-    // 8. Productions par type
-    const productionsCtx = document.getElementById('productionsChart').getContext('2d');
-    new Chart(productionsCtx, {
+    // 7. Projet Arryadia
+    const arryradiaCtx = document.getElementById('arryradiaChart').getContext('2d');
+    new Chart(arryradiaCtx, {
         type: 'pie',
         data: {
-            labels: fictitiousData.productions.labels,
+            labels: projectData.arryadia.labels,
             datasets: [{
-                data: fictitiousData.productions.data,
+                data: projectData.arryadia.data,
                 backgroundColor: [
-                    colors.primary, colors.success, colors.warning,
-                    colors.danger, colors.info, colors.purple
+                    cpColors.primary, cpColors.success, 
+                    cpColors.warning, cpColors.purple
                 ],
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -509,13 +539,42 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: '#fff', padding: 20 }
+                    labels: { color: '#fff', padding: 15 }
                 }
             }
         }
     });
 
-    // =================== GESTION DES FILTRES ===================
+    // 8. Niveau de risques
+    const risksCtx = document.getElementById('risksChart').getContext('2d');
+    new Chart(risksCtx, {
+        type: 'doughnut',
+        data: {
+            labels: projectData.risks.labels,
+            datasets: [{
+                data: projectData.risks.data,
+                backgroundColor: [
+                    cpColors.success, cpColors.warning, 
+                    cpColors.primary, cpColors.danger
+                ],
+                borderWidth: 3,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#fff', padding: 15 }
+                }
+            }
+        }
+    });
+
+    // =================== GESTION DES FILTRES (même logique que directeur) ===================
     
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
@@ -528,8 +587,8 @@
     }
 
     // Gestion des dropdowns
-    document.getElementById('dept-dropdown-btn').addEventListener('click', function() {
-        const menu = document.getElementById('dept-dropdown-menu');
+    document.getElementById('project-dropdown-btn').addEventListener('click', function() {
+        const menu = document.getElementById('project-dropdown-menu');
         const arrow = this.querySelector('.dropdown-arrow');
         
         menu.classList.toggle('show');
@@ -548,35 +607,35 @@
         arrow.style.transform = menu.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
         
         // Fermer l'autre dropdown
-        document.getElementById('dept-dropdown-menu').classList.remove('show');
-        document.querySelector('#dept-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+        document.getElementById('project-dropdown-menu').classList.remove('show');
+        document.querySelector('#project-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
     });
 
     // Fermer les dropdowns quand on clique ailleurs
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.dropdown-container')) {
-            document.getElementById('dept-dropdown-menu').classList.remove('show');
+            document.getElementById('project-dropdown-menu').classList.remove('show');
             document.getElementById('type-dropdown-menu').classList.remove('show');
-            document.querySelector('#dept-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+            document.querySelector('#project-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
             document.querySelector('#type-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
         }
     });
 
-    // Filtrage par département
-    document.querySelectorAll('#dept-dropdown-menu .dropdown-item').forEach(item => {
+    // Filtrage par projet
+    document.querySelectorAll('#project-dropdown-menu .dropdown-item').forEach(item => {
         item.addEventListener('click', function() {
             // Retirer la classe active de tous les items
-            document.querySelectorAll('#dept-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('#project-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
             // Ajouter la classe active à l'item cliqué
             this.classList.add('active');
             
             // Mettre à jour le texte du bouton
             const selectedText = this.textContent;
-            document.getElementById('dept-selected').textContent = selectedText;
+            document.getElementById('project-selected').textContent = selectedText;
             
             // Fermer le dropdown
-            document.getElementById('dept-dropdown-menu').classList.remove('show');
-            document.querySelector('#dept-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+            document.getElementById('project-dropdown-menu').classList.remove('show');
+            document.querySelector('#project-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
             
             filterDiagrams();
         });
@@ -612,11 +671,11 @@
             let showChart = true;
             
             // Vérifier les filtres actifs
-            const activeDeptFilter = document.querySelector('#dept-dropdown-menu .dropdown-item.active').getAttribute('data-filter');
+            const activeProjectFilter = document.querySelector('#project-dropdown-menu .dropdown-item.active').getAttribute('data-filter');
             const activeTypeFilter = document.querySelector('#type-dropdown-menu .dropdown-item.active').getAttribute('data-diagram');
             
-            // Appliquer le filtre département
-            if (activeDeptFilter !== 'all' && department !== activeDeptFilter && department !== 'all') {
+            // Appliquer le filtre projet
+            if (activeProjectFilter !== 'all' && department !== activeProjectFilter && department !== 'all') {
                 showChart = false;
             }
             
@@ -646,7 +705,7 @@
 <style>
     .container {
         min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%);
     }
     
     .main-content {
@@ -664,7 +723,7 @@
     
     .welcome-text {
         text-align: center;
-        color: #f0f0f0;
+        color: #fed7aa;
         font-size: 1.2rem;
         margin-bottom: 40px;
     }
@@ -700,7 +759,7 @@
 
     .kpi-icon {
         font-size: 2.5rem;
-        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        background: linear-gradient(45deg, #fbbf24, #f59e0b);
         border-radius: 50%;
         width: 70px;
         height: 70px;
@@ -718,7 +777,7 @@
     }
 
     .kpi-content p {
-        color: #e0e0e0;
+        color: #fed7aa;
         margin: 5px 0;
         font-size: 1rem;
     }
@@ -772,7 +831,7 @@
     }
     
     .filter-section h3 {
-        color: #f0f0f0;
+        color: #fed7aa;
         margin-bottom: 15px;
         font-size: 1.3rem;
         border-bottom: 2px solid rgba(255, 255, 255, 0.2);
@@ -843,7 +902,7 @@
     
     .dropdown-item {
         padding: 12px 20px;
-        color: #e0e0e0;
+        color: #fed7aa;
         cursor: pointer;
         transition: all 0.2s ease;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -859,14 +918,14 @@
     }
     
     .dropdown-item.active {
-        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        background: linear-gradient(45deg, #f97316, #ea580c);
         color: white;
     }
     
     /* Zone des diagrammes */
     .diagrams-container {
         max-width: 1200px;
-        margin: 0 auto;
+        margin: 0 auto 40px auto;
     }
     
     .diagrams-container h2 {
@@ -912,6 +971,121 @@
         width: 100% !important;
         height: 300px !important;
         border-radius: 10px;
+    }
+
+    /* Tâches urgentes */
+    .urgent-tasks {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .urgent-tasks h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .tasks-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .task-item {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        border-radius: 15px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .task-item:hover {
+        transform: translateX(10px);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .task-item.priority-high {
+        border-left: 4px solid #ef4444;
+    }
+
+    .task-item.priority-medium {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .task-item.priority-low {
+        border-left: 4px solid #10b981;
+    }
+
+    .task-status {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .task-content {
+        flex: 1;
+        color: white;
+    }
+
+    .task-content h4 {
+        margin: 0 0 5px 0;
+        font-size: 1.1rem;
+    }
+
+    .task-content p {
+        margin: 0 0 8px 0;
+        opacity: 0.8;
+        font-size: 0.9rem;
+    }
+
+    .task-project {
+        font-size: 0.8rem;
+        opacity: 0.7;
+        font-style: italic;
+    }
+
+    .task-actions {
+        flex-shrink: 0;
+    }
+
+    .btn-small {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-secondary {
+        background: #8b5cf6;
+        color: white;
+    }
+
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .btn-small:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
     
     /* Responsive */
@@ -964,6 +1138,20 @@
         .filter-container {
             padding: 20px;
             margin: 0 10px 20px 10px;
+        }
+        
+        .task-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .task-actions {
+            align-self: stretch;
+        }
+
+        .btn-small {
+            width: 100%;
         }
     }
     
