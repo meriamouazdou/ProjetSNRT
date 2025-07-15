@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
 def dashboard_view(request):
-    return render(request, 'dashboard/chefprojet.html')
+    return render(request, 'dashboard/cs.html')
 
 
