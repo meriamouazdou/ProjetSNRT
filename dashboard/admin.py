@@ -12,9 +12,9 @@ class FichierCSVAdmin(admin.ModelAdmin):
 from django.contrib import admin
 from django.contrib import messages
 from django.http import HttpResponseRedirect
-from .models import CSVDataSource, DynamicData, UserRole, process_csv_file
+#from .models import CSVDataSource, DynamicData, UserRole, process_csv_file
 
-@admin.register(CSVDataSource)
+#@admin.register(CSVDataSource)
 class CSVDataSourceAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'uploaded_at', 'is_active', 'data_count']
     list_filter = ['category', 'is_active', 'uploaded_at']
@@ -63,7 +63,7 @@ class CSVDataSourceAdmin(admin.ModelAdmin):
             else:
                 messages.error(request, f"Erreur lors du traitement: {message}")
 
-@admin.register(DynamicData)
+#@admin.register(DynamicData)
 class DynamicDataAdmin(admin.ModelAdmin):
     list_display = ['id', 'source', 'created_at', 'preview_data']
     list_filter = ['source', 'created_at']
@@ -86,7 +86,7 @@ class DynamicDataAdmin(admin.ModelAdmin):
         """Empêcher l'ajout manuel - données viennent des CSV"""
         return False
 
-@admin.register(UserRole)
+#@admin.register(UserRole)
 class UserRoleAdmin(admin.ModelAdmin):
     list_display = ['user', 'role', 'get_allowed_categories']
     list_filter = ['role']
