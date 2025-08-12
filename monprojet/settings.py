@@ -131,3 +131,17 @@ import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# Configuration MongoDB séparée
+MONGO_DB_NAME = 'installations_techniques'
+MONGO_HOST = 'localhost'
+MONGO_PORT = 27017
+
+# configuration Django normale pour l'admin
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
