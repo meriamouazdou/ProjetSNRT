@@ -1,7 +1,11 @@
 from django.core.management.base import BaseCommand
 import csv
-from pymongo import MongoClient
-from django.conf import settings
+import sys
+import os
+
+# Ajouter le répertoire parent au chemin Python
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from database import MongoDBConnection
 
 class Command(BaseCommand):
     help = 'Importe un fichier CSV vers MongoDB'
@@ -11,10 +15,9 @@ class Command(BaseCommand):
         parser.add_argument('collection', type=str, help='Nom de la collection MongoDB')
     
     def handle(self, *args, **options):
-        # Connexion à MongoDB
-        client = MongoClient(f'mongodb://{settings.MONGO_HOST}:{settings.MONGO_PORT}/')
-        db = client[settings.MONGO_DB_NAME]
-        collection = db[options['collection']]
+        # Utiliser votre connexion MongoDB
+        mongo_db = MongoDBConnection()
+        collection = mongo_db.get_collection(options['collection'])
         
         # Lire et importer le CSV
         try:
@@ -43,5 +46,3 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f'❌ Fichier non trouvé: {options["csv_file"]}'))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'❌ Erreur: {str(e)}'))
-        finally:
-            client.close()
