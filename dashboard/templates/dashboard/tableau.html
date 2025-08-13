@@ -1,0 +1,1137 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Tableau de Bord - SNRT{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="sidebar" id="sidebar">
+        <a href="/dashboard/">🏠 Accueil</a>
+        <a href="/dashboard/statistics/">📊 Statistiques</a>
+        <a href="/dashboard/reports/">📈 Rapports</a>
+        <a href="/dashboard/settings/">⚙️ Paramètres</a>
+        <a href="/logout/">🚪 Déconnexion</a>
+    </div>
+
+    <main class="main-content">
+        <h1>Tableau de Bord des Stations SNRT</h1>
+        <p class="welcome-text">Vue d'ensemble des stations et services par région</p>
+        
+        <!-- Filtrage par station -->
+        <div class="filter-container">
+            <h2>🔍 Filtrage par Station</h2>
+            <div class="dropdown-container">
+                <button class="dropdown-btn" id="station-dropdown-btn">
+                    <span id="station-selected">Toutes les stations</span>
+                    <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="dropdown-menu" id="station-dropdown-menu">
+                    <div class="dropdown-item active" data-station="all">Toutes les stations</div>
+                    <div class="dropdown-item" data-station="jbel-lahdid">Jbel-lahdid</div>
+                    <div class="dropdown-item" data-station="jerada">Jerada</div>
+                    <div class="dropdown-item" data-station="kaf-el-ghar">Kaf El Ghar</div>
+                    <div class="dropdown-item" data-station="kelaat-mgouna">Kelaat-mgouna</div>
+                    <div class="dropdown-item" data-station="agadir">Agadir</div>
+                    <div class="dropdown-item" data-station="casablanca">Casablanca</div>
+                    <div class="dropdown-item" data-station="rabat">Rabat</div>
+                    <div class="dropdown-item" data-station="fes">Fès</div>
+                    <div class="dropdown-item" data-station="marrakech">Marrakech</div>
+                    <div class="dropdown-item" data-station="tanger">Tanger</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vue générale (toutes les stations) -->
+        <div id="general-view">
+            <!-- Statistiques rapides -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-icon">🏗️</div>
+                    <div class="stat-info">
+                        <h3>Total Stations</h3>
+                        <p class="stat-number">291</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📡</div>
+                    <div class="stat-info">
+                        <h3>Services TNT</h3>
+                        <p class="stat-number">245</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">📻</div>
+                    <div class="stat-info">
+                        <h3>Services FM</h3>
+                        <p class="stat-number">178</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">🔧</div>
+                    <div class="stat-info">
+                        <h3>En Contrôle</h3>
+                        <p class="stat-number">89</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diagrammes généraux -->
+            <div class="charts-container">
+                <!-- Diagramme par Région SNRT -->
+                <div class="chart-card">
+                    <h3>📊 Répartition par Région SNRT</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="regionChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Diagramme Services par Station -->
+                <div class="chart-card">
+                    <h3>📈 Services Installés par Type</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="servicesChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Diagramme ConfigUser -->
+                <div class="chart-card">
+                    <h3>👥 Configurations par Utilisateur</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="configUserChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Diagramme Catégories -->
+                <div class="chart-card">
+                    <h3>🔗 Répartition par Catégorie</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Diagramme Services Combinés -->
+                <div class="chart-card full-width">
+                    <h3>📉 Services par Région SNRT</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="servicesRegionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue station individuelle -->
+        <div id="station-view" style="display: none;">
+            <!-- Info station -->
+            <div class="station-info-container">
+                <div class="station-info-card">
+                    <h2 id="station-name">Station Name</h2>
+                    <div class="station-details">
+                        <div class="detail-item">
+                            <span class="detail-label">📍 Province:</span>
+                            <span id="station-province">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">🗺️ Région:</span>
+                            <span id="station-region">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">🏢 SNRT RS:</span>
+                            <span id="station-snrt-rs">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📊 Catégorie:</span>
+                            <span id="station-category">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">📞 GSM:</span>
+                            <span id="station-gsm">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">⚙️ Config User:</span>
+                            <span id="station-config-user">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diagrammes station individuelle -->
+            <div class="charts-container">
+                <!-- Services de la station -->
+                <div class="chart-card">
+                    <h3>📡 Services Installés</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="stationServicesChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Status de contrôle -->
+                <div class="chart-card">
+                    <h3>🔧 Status de Contrôle</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="stationControlChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Informations géographiques -->
+                <div class="chart-card">
+                    <h3>🗺️ Position Géographique</h3>
+                    <div class="geo-info">
+                        <div class="geo-item">
+                            <span class="geo-label">🌐 Latitude:</span>
+                            <span id="station-latitude">-</span>
+                        </div>
+                        <div class="geo-item">
+                            <span class="geo-label">🌐 Longitude:</span>
+                            <span id="station-longitude">-</span>
+                        </div>
+                        <div class="geo-item">
+                            <span class="geo-label">⛰️ Altitude:</span>
+                            <span id="station-altitude">- m</span>
+                        </div>
+                        <div class="geo-item">
+                            <span class="geo-label">🏷️ Code:</span>
+                            <span id="station-code">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Historique -->
+                <div class="chart-card">
+                    <h3>📅 Informations de Création</h3>
+                    <div class="history-info">
+                        <div class="history-item">
+                            <span class="history-label">📅 Date de création:</span>
+                            <span id="station-creation-date">-</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-label">👤 Créé par:</span>
+                            <span id="station-creator">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+    // Couleurs spécifiques pour chaque service
+    const serviceColors = {
+        'TNT': '#ff4757',        // Rouge
+        'FM': '#2ed573',         // Vert
+        'AM': '#ffa502',         // Orange
+        'Administration': '#3742fa', // Bleu
+        'FH': '#8c7ae6',         // Violet
+        'ST': '#ff6b6b'          // Rouge clair
+    };
+
+    // Couleurs pour les statuts
+    const statusColors = {
+        active: '#4ade80',       // Vert pour actif
+        inactive: '#ef4444',     // Rouge pour inactif
+        control: '#22c55e',      // Vert pour en contrôle
+        noControl: '#dc2626'     // Rouge pour hors contrôle
+    };
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const currentRight = sidebar.style.right;
+        if (currentRight === '0px') {
+            sidebar.style.right = '-200px';
+        } else {
+            sidebar.style.right = '0px';
+        }
+    }
+
+    // Données simulées des stations individuelles basées sur tes exemples
+    const stationsDetails = {
+        'jbel-lahdid': {
+            name: 'Jbel-lahdid',
+            province: 'Essaouira',
+            region: 'Marrakech-Safi',
+            snrt_rs: 'Marrakech',
+            latitude: 31.732778,
+            longitude: -9.453056,
+            altitude: 709,
+            category: 'G',
+            code: 4066,
+            gsm: '674908925',
+            config_user: 'h.zagrari',
+            creation_date: '2024-08-24',
+            control: true,
+            services: { TNT: true, FM: true, AM: false, Administration: false, FH: true, ST: false }
+        },
+        'jerada': {
+            name: 'Jerada',
+            province: 'Jerada',
+            region: "L'Oriental",
+            snrt_rs: 'Oujda',
+            latitude: 34.323333,
+            longitude: -2.155,
+            altitude: 1049,
+            category: 'P',
+            code: 4063,
+            gsm: '674908922',
+            config_user: 'h.zagrari',
+            creation_date: '2024-10-04',
+            control: false,
+            services: { TNT: true, FM: false, AM: false, Administration: false, FH: false, ST: false }
+        },
+        'kaf-el-ghar': {
+            name: 'Kaf El Ghar',
+            province: 'Taza',
+            region: 'Fès-Meknès',
+            snrt_rs: 'Fès-Meknès',
+            latitude: 34.536426,
+            longitude: -4.275644,
+            altitude: 1120,
+            category: 'P',
+            code: 4077,
+            gsm: '674908930',
+            config_user: 'm.benhmidou',
+            creation_date: '2024-07-04',
+            control: false,
+            services: { TNT: true, FM: true, AM: false, Administration: false, FH: false, ST: false }
+        },
+        'kelaat-mgouna': {
+            name: 'Kelaat-mgouna',
+            province: 'Tinghire',
+            region: 'Darâa-Tafilalet',
+            snrt_rs: 'Marrakech',
+            latitude: 31.237899,
+            longitude: -6.04806187,
+            altitude: 1439,
+            category: 'P',
+            code: 4104,
+            gsm: '674908945',
+            config_user: 'h.zagrari',
+            creation_date: '2024-08-24',
+            control: false,
+            services: { TNT: true, FM: true, AM: false, Administration: false, FH: false, ST: false }
+        },
+        // Stations supplémentaires
+        'agadir': {
+            name: 'Agadir',
+            province: 'Agadir-Ida-Ou-Tanane',
+            region: 'Souss-Massa',
+            snrt_rs: 'Agadir',
+            latitude: 30.4278,
+            longitude: -9.5981,
+            altitude: 56,
+            category: 'G',
+            code: 4001,
+            gsm: '674908901',
+            config_user: 's.hajji',
+            creation_date: '2024-05-15',
+            control: true,
+            services: { TNT: true, FM: true, AM: true, Administration: true, FH: true, ST: true }
+        },
+        'casablanca': {
+            name: 'Casablanca',
+            province: 'Casablanca',
+            region: 'Casablanca-Settat',
+            snrt_rs: 'Casablanca',
+            latitude: 33.5731,
+            longitude: -7.5898,
+            altitude: 50,
+            category: 'G',
+            code: 4002,
+            gsm: '674908902',
+            config_user: 'a.alami',
+            creation_date: '2024-03-10',
+            control: true,
+            services: { TNT: true, FM: true, AM: true, Administration: true, FH: true, ST: false }
+        },
+        'rabat': {
+            name: 'Rabat',
+            province: 'Rabat',
+            region: 'Rabat-Salé-Kénitra',
+            snrt_rs: 'Rabat',
+            latitude: 34.0209,
+            longitude: -6.8416,
+            altitude: 75,
+            category: 'G',
+            code: 4003,
+            gsm: '674908903',
+            config_user: 'k.bennani',
+            creation_date: '2024-02-20',
+            control: true,
+            services: { TNT: true, FM: true, AM: false, Administration: true, FH: true, ST: false }
+        },
+        'fes': {
+            name: 'Fès',
+            province: 'Fès',
+            region: 'Fès-Meknès',
+            snrt_rs: 'Fès-Meknès',
+            latitude: 34.0181,
+            longitude: -5.0078,
+            altitude: 410,
+            category: 'G',
+            code: 4004,
+            gsm: '674908904',
+            config_user: 'n.berrada',
+            creation_date: '2024-01-15',
+            control: false,
+            services: { TNT: true, FM: true, AM: true, Administration: false, FH: false, ST: false }
+        },
+        'marrakech': {
+            name: 'Marrakech',
+            province: 'Marrakech',
+            region: 'Marrakech-Safi',
+            snrt_rs: 'Marrakech',
+            latitude: 31.6295,
+            longitude: -7.9811,
+            altitude: 466,
+            category: 'G',
+            code: 4005,
+            gsm: '674908905',
+            config_user: 'h.zagrari',
+            creation_date: '2024-04-10',
+            control: true,
+            services: { TNT: true, FM: true, AM: false, Administration: true, FH: true, ST: true }
+        },
+        'tanger': {
+            name: 'Tanger',
+            province: 'Tanger-Assilah',
+            region: 'Tanger-Tétouan-Al Hoceïma',
+            snrt_rs: 'Tanger',
+            latitude: 35.7595,
+            longitude: -5.8340,
+            altitude: 20,
+            category: 'G',
+            code: 4006,
+            gsm: '674908906',
+            config_user: 'y.tazi',
+            creation_date: '2024-06-05',
+            control: true,
+            services: { TNT: true, FM: false, AM: true, Administration: false, FH: true, ST: false }
+        }
+    };
+
+    // Gestion du dropdown station
+    document.getElementById('station-dropdown-btn').addEventListener('click', function() {
+        const menu = document.getElementById('station-dropdown-menu');
+        const arrow = this.querySelector('.dropdown-arrow');
+        
+        menu.classList.toggle('show');
+        arrow.style.transform = menu.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+    });
+
+    // Fermer le dropdown quand on clique ailleurs
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.dropdown-container')) {
+            document.getElementById('station-dropdown-menu').classList.remove('show');
+            document.querySelector('#station-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+        }
+    });
+
+    // Filtrage par station
+    document.querySelectorAll('#station-dropdown-menu .dropdown-item').forEach(item => {
+        item.addEventListener('click', function() {
+            // Retirer la classe active de tous les items
+            document.querySelectorAll('#station-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
+            // Ajouter la classe active à l'item cliqué
+            this.classList.add('active');
+            
+            // Mettre à jour le texte du bouton
+            const selectedText = this.textContent;
+            document.getElementById('station-selected').textContent = selectedText;
+            
+            // Fermer le dropdown
+            document.getElementById('station-dropdown-menu').classList.remove('show');
+            document.querySelector('#station-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+            
+            // Afficher la vue correspondante
+            const stationId = this.getAttribute('data-station');
+            showStationView(stationId);
+        });
+    });
+
+    function showStationView(stationId) {
+        const generalView = document.getElementById('general-view');
+        const stationView = document.getElementById('station-view');
+
+        if (stationId === 'all') {
+            generalView.style.display = 'block';
+            stationView.style.display = 'none';
+        } else {
+            generalView.style.display = 'none';
+            stationView.style.display = 'block';
+            updateStationDetails(stationId);
+        }
+    }
+
+    function updateStationDetails(stationId) {
+        const station = stationsDetails[stationId];
+        if (!station) return;
+
+        // Mettre à jour les informations de la station
+        document.getElementById('station-name').textContent = station.name;
+        document.getElementById('station-province').textContent = station.province;
+        document.getElementById('station-region').textContent = station.region;
+        document.getElementById('station-snrt-rs').textContent = station.snrt_rs;
+        document.getElementById('station-category').textContent = station.category;
+        document.getElementById('station-gsm').textContent = station.gsm;
+        document.getElementById('station-config-user').textContent = station.config_user;
+        document.getElementById('station-latitude').textContent = station.latitude.toFixed(6);
+        document.getElementById('station-longitude').textContent = station.longitude.toFixed(6);
+        document.getElementById('station-altitude').textContent = `${station.altitude} m`;
+        document.getElementById('station-code').textContent = station.code;
+        document.getElementById('station-creation-date').textContent = station.creation_date;
+        document.getElementById('station-creator').textContent = station.config_user;
+
+        // Créer le diagramme des services
+        createStationServicesChart(station.services);
+        createStationControlChart(station.control);
+    }
+
+    function createStationServicesChart(services) {
+        const ctx = document.getElementById('stationServicesChart');
+        if (ctx.chart) {
+            ctx.chart.destroy();
+        }
+
+        const serviceLabels = Object.keys(services);
+        const serviceValues = Object.values(services).map(v => v ? 1 : 0);
+        const backgroundColors = serviceLabels.map(service => 
+            services[service] ? serviceColors[service] : '#6b7280'
+        );
+        const borderColors = serviceLabels.map(service => 
+            services[service] ? serviceColors[service] : '#4b5563'
+        );
+
+        ctx.chart = new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: serviceLabels,
+                datasets: [{
+                    data: serviceValues,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { 
+                            color: '#e0e0e0',
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                return data.labels.map((label, i) => ({
+                                    text: `${label}: ${data.datasets[0].data[i] ? 'Actif' : 'Inactif'}`,
+                                    fillStyle: data.datasets[0].backgroundColor[i],
+                                    hidden: false,
+                                    index: i
+                                }));
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function createStationControlChart(controlStatus) {
+        const ctx = document.getElementById('stationControlChart');
+        if (ctx.chart) {
+            ctx.chart.destroy();
+        }
+
+        ctx.chart = new Chart(ctx.getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: ['En Contrôle', 'Hors Contrôle'],
+                datasets: [{
+                    data: controlStatus ? [1, 0] : [0, 1],
+                    backgroundColor: controlStatus ? [statusColors.control, '#6b7280'] : ['#6b7280', statusColors.noControl],
+                    borderColor: controlStatus ? [statusColors.control, '#6b7280'] : ['#6b7280', statusColors.noControl],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e0e0e0' }
+                    }
+                }
+            }
+        });
+    }
+    const stationsData = {
+        regions: ['Marrakech', 'Oujda', 'Fès-Meknès', 'Casablanca', 'Rabat', 'Tanger', 'Agadir'],
+        stationCounts: [67, 45, 52, 78, 32, 28, 34],
+        
+        services: ['TNT', 'FM', 'AM', 'FH', 'ST', 'Administration'],
+        serviceCounts: [245, 178, 23, 89, 34, 67],
+        
+        configUsers: ['h.zagrari', 'm.benhmidou', 'a.alami', 's.hajji', 'n.berrada'],
+        userCounts: [89, 67, 45, 56, 34],
+        
+        categories: ['G', 'P', 'S'],
+        categoryCounts: [156, 98, 37]
+    };
+
+    // Couleurs cohérentes avec le design
+    const colors = {
+        primary: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4', '#f72585', '#4cc9f0'],
+        gradient: ['rgba(255, 107, 107, 0.8)', 'rgba(255, 165, 0, 0.8)', 'rgba(102, 126, 234, 0.8)', 'rgba(118, 75, 162, 0.8)', 'rgba(72, 202, 228, 0.8)', 'rgba(247, 37, 133, 0.8)', 'rgba(76, 201, 240, 0.8)']
+    };
+
+    // Configuration par défaut des graphiques
+    Chart.defaults.color = '#e0e0e0';
+    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+
+    // 1. Graphique Régions SNRT
+    const regionCtx = document.getElementById('regionChart').getContext('2d');
+    new Chart(regionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: stationsData.regions,
+            datasets: [{
+                data: stationsData.stationCounts,
+                backgroundColor: colors.gradient,
+                borderColor: colors.primary,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#e0e0e0' }
+                }
+            }
+        }
+    });
+
+    // 2. Graphique Services avec couleurs spécifiques
+    const servicesCtx = document.getElementById('servicesChart').getContext('2d');
+    new Chart(servicesCtx, {
+        type: 'bar',
+        data: {
+            labels: stationsData.services,
+            datasets: [{
+                label: 'Nombre de Services',
+                data: stationsData.serviceCounts,
+                backgroundColor: stationsData.services.map(service => serviceColors[service] || '#667eea'),
+                borderColor: stationsData.services.map(service => serviceColors[service] || '#667eea'),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#e0e0e0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                x: {
+                    ticks: { color: '#e0e0e0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                }
+            }
+        }
+    });
+
+    // 3. Graphique ConfigUser
+    const configUserCtx = document.getElementById('configUserChart').getContext('2d');
+    new Chart(configUserCtx, {
+        type: 'pie',
+        data: {
+            labels: stationsData.configUsers,
+            datasets: [{
+                data: stationsData.userCounts,
+                backgroundColor: colors.gradient,
+                borderColor: colors.primary,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#e0e0e0' }
+                }
+            }
+        }
+    });
+
+    // 4. Graphique Catégories
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'polarArea',
+        data: {
+            labels: ['Catégorie G', 'Catégorie P', 'Catégorie S'],
+            datasets: [{
+                data: stationsData.categoryCounts,
+                backgroundColor: colors.gradient.slice(0, 3),
+                borderColor: colors.primary.slice(0, 3),
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#e0e0e0' }
+                }
+            },
+            scales: {
+                r: {
+                    ticks: { color: '#e0e0e0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                }
+            }
+        }
+    });
+
+    // 5. Graphique Services par Région avec couleurs spécifiques
+    const servicesRegionCtx = document.getElementById('servicesRegionChart').getContext('2d');
+    new Chart(servicesRegionCtx, {
+        type: 'line',
+        data: {
+            labels: stationsData.regions,
+            datasets: [
+                {
+                    label: 'TNT',
+                    data: [45, 32, 38, 56, 22, 18, 24],
+                    borderColor: serviceColors.TNT,
+                    backgroundColor: serviceColors.TNT + '20',
+                    tension: 0.4
+                },
+                {
+                    label: 'FM',
+                    data: [34, 28, 31, 42, 18, 15, 19],
+                    borderColor: serviceColors.FM,
+                    backgroundColor: serviceColors.FM + '20',
+                    tension: 0.4
+                },
+                {
+                    label: 'FH',
+                    data: [12, 8, 15, 18, 7, 5, 9],
+                    borderColor: serviceColors.FH,
+                    backgroundColor: serviceColors.FH + '20',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: { color: '#e0e0e0' }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#e0e0e0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                x: {
+                    ticks: { color: '#e0e0e0' },
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                }
+            }
+        }
+    });
+</script>
+
+<style>
+    .container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: -200px;
+        width: 200px;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.9);
+        transition: right 0.3s ease;
+        z-index: 1000;
+        padding: 20px 0;
+    }
+    
+    .sidebar a {
+        display: block;
+        color: white;
+        text-decoration: none;
+        padding: 15px 20px;
+        transition: background 0.3s ease;
+    }
+    
+    .sidebar a:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .main-content {
+        padding: 20px;
+        margin-top: 70px;
+    }
+    
+    h1 {
+        text-align: center;
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .welcome-text {
+        text-align: center;
+        color: #f0f0f0;
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+    }
+    
+    /* Container de filtrage avec z-index élevé */
+    .filter-container {
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 100;
+    }
+    
+    .filter-container h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    /* Dropdowns avec z-index très élevé */
+    .dropdown-container {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .dropdown-btn {
+        width: 100%;
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 1rem;
+    }
+    
+    .dropdown-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+    }
+    
+    .dropdown-arrow {
+        transition: transform 0.3s ease;
+        font-size: 0.8rem;
+    }
+    
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        margin-top: 5px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        z-index: 9999;
+        max-height: 300px;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    .dropdown-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    
+    .dropdown-item {
+        padding: 12px 20px;
+        color: #e0e0e0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+    
+    .dropdown-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+    
+    .dropdown-item.active {
+        background: linear-gradient(45deg, #ff6b6b, #ffa500);
+        color: white;
+    }
+
+    /* Vue station individuelle */
+    .station-info-container {
+        margin-bottom: 30px;
+    }
+    
+    .station-info-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .station-info-card h2 {
+        color: white;
+        font-size: 2.2rem;
+        margin-bottom: 25px;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .station-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+    
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .detail-label {
+        color: #f0f0f0;
+        font-weight: 500;
+    }
+    
+    .detail-item span:last-child {
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* Informations géographiques et historique */
+    .geo-info, .history-info {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .geo-item, .history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .geo-label, .history-label {
+        color: #f0f0f0;
+        font-weight: 500;
+    }
+    
+    .geo-item span:last-child, .history-item span:last-child {
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* Cartes de statistiques rapides */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        margin-right: 20px;
+    }
+    
+    .stat-info h3 {
+        color: #f0f0f0;
+        margin: 0 0 10px 0;
+        font-size: 1.1rem;
+    }
+    
+    .stat-number {
+        color: white;
+        font-size: 2.2rem;
+        font-weight: bold;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    /* Container des graphiques */
+    .charts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 25px;
+        max-width: 1400px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .chart-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .chart-card.full-width {
+        grid-column: 1 / -1;
+    }
+    
+    .chart-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .chart-card h3 {
+        color: white;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        text-align: center;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    
+    .chart-card.full-width .chart-wrapper {
+        height: 400px;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-container {
+            grid-template-columns: 1fr;
+            padding: 0 10px;
+        }
+        
+        .charts-container {
+            grid-template-columns: 1fr;
+            padding: 0 10px;
+        }
+        
+        .chart-card {
+            padding: 20px;
+        }
+        
+        .chart-wrapper {
+            height: 250px;
+        }
+        
+        .stat-card {
+            padding: 20px;
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+        
+        h1 {
+            font-size: 2rem;
+        }
+        
+        .filter-container {
+            margin: 0 10px 30px 10px;
+            padding: 20px;
+        }
+        
+        .dropdown-container {
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
