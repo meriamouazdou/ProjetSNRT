@@ -7,15 +7,20 @@
 <div class="container">
     <div class="sidebar" id="sidebar">
         <a href="/dashboard/">🏠 Accueil</a>
-        <a href="/dashboard/statistics/">📊 Statistiques</a>
-        <a href="/dashboard/reports/">📈 Rapports</a>
-        <a href="/dashboard/settings/">⚙️ Paramètres</a>
+        <a href="/dashboard/mongodb-test/">🔧 Test MongoDB</a>
+        <a href="/dashboard/api/refresh-data/">🔄 Rafraîchir</a>
         <a href="/logout/">🚪 Déconnexion</a>
     </div>
 
     <main class="main-content">
         <h1>Tableau de Bord des Stations SNRT</h1>
-        <p class="welcome-text">Vue d'ensemble des stations et services par région</p>
+        {% if mongodb_connected %}
+            <p class="welcome-text">Données en temps réel depuis MongoDB - {{ stats.total_stations }} stations</p>
+        {% else %}
+            <div class="error-message">
+                ⚠️ {{ error_message }}
+            </div>
+        {% endif %}
         
         <!-- Filtrage par station -->
         <div class="filter-container">
@@ -27,29 +32,22 @@
                 </button>
                 <div class="dropdown-menu" id="station-dropdown-menu">
                     <div class="dropdown-item active" data-station="all">Toutes les stations</div>
-                    <div class="dropdown-item" data-station="jbel-lahdid">Jbel-lahdid</div>
-                    <div class="dropdown-item" data-station="jerada">Jerada</div>
-                    <div class="dropdown-item" data-station="kaf-el-ghar">Kaf El Ghar</div>
-                    <div class="dropdown-item" data-station="kelaat-mgouna">Kelaat-mgouna</div>
-                    <div class="dropdown-item" data-station="agadir">Agadir</div>
-                    <div class="dropdown-item" data-station="casablanca">Casablanca</div>
-                    <div class="dropdown-item" data-station="rabat">Rabat</div>
-                    <div class="dropdown-item" data-station="fes">Fès</div>
-                    <div class="dropdown-item" data-station="marrakech">Marrakech</div>
-                    <div class="dropdown-item" data-station="tanger">Tanger</div>
+                    {% for station in station_names %}
+                        <div class="dropdown-item" data-station="{{ station.name }}">{{ station.display_name }}</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
         
-        <!-- Vue générale (toutes les stations) -->
+        <!-- Vue générale -->
         <div id="general-view">
-            <!-- Statistiques rapides -->
+            <!-- Statistiques rapides depuis MongoDB -->
             <div class="stats-container">
                 <div class="stat-card">
-                    <div class="stat-icon">🏗️</div>
+                    <div class="stat-icon">🗼</div>
                     <div class="stat-info">
                         <h3>Total Stations</h3>
-                        <p class="stat-number">291</p>
+                        <p class="stat-number">{{ stats.total_stations }}</p>
                     </div>
                 </div>
                 
@@ -57,7 +55,7 @@
                     <div class="stat-icon">📡</div>
                     <div class="stat-info">
                         <h3>Services TNT</h3>
-                        <p class="stat-number">245</p>
+                        <p class="stat-number">{{ stats.services_tnt }}</p>
                     </div>
                 </div>
                 
@@ -65,7 +63,7 @@
                     <div class="stat-icon">📻</div>
                     <div class="stat-info">
                         <h3>Services FM</h3>
-                        <p class="stat-number">178</p>
+                        <p class="stat-number">{{ stats.services_fm }}</p>
                     </div>
                 </div>
                 
@@ -73,12 +71,12 @@
                     <div class="stat-icon">🔧</div>
                     <div class="stat-info">
                         <h3>En Contrôle</h3>
-                        <p class="stat-number">89</p>
+                        <p class="stat-number">{{ stats.control_count }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Diagrammes généraux -->
+            <!-- Diagrammes avec données MongoDB -->
             <div class="charts-container">
                 <!-- Diagramme par Région SNRT -->
                 <div class="chart-card">
@@ -88,7 +86,7 @@
                     </div>
                 </div>
                 
-                <!-- Diagramme Services par Station -->
+                <!-- Diagramme Services -->
                 <div class="chart-card">
                     <h3>📈 Services Installés par Type</h3>
                     <div class="chart-wrapper">
@@ -112,7 +110,7 @@
                     </div>
                 </div>
                 
-                <!-- Diagramme Services Combinés -->
+                <!-- Diagramme Services par Région -->
                 <div class="chart-card full-width">
                     <h3>📉 Services par Région SNRT</h3>
                     <div class="chart-wrapper">
@@ -124,7 +122,6 @@
 
         <!-- Vue station individuelle -->
         <div id="station-view" style="display: none;">
-            <!-- Info station -->
             <div class="station-info-container">
                 <div class="station-info-card">
                     <h2 id="station-name">Station Name</h2>
@@ -157,9 +154,7 @@
                 </div>
             </div>
 
-            <!-- Diagrammes station individuelle -->
             <div class="charts-container">
-                <!-- Services de la station -->
                 <div class="chart-card">
                     <h3>📡 Services Installés</h3>
                     <div class="chart-wrapper">
@@ -167,7 +162,6 @@
                     </div>
                 </div>
                 
-                <!-- Status de contrôle -->
                 <div class="chart-card">
                     <h3>🔧 Status de Contrôle</h3>
                     <div class="chart-wrapper">
@@ -175,7 +169,6 @@
                     </div>
                 </div>
                 
-                <!-- Informations géographiques -->
                 <div class="chart-card">
                     <h3>🗺️ Position Géographique</h3>
                     <div class="geo-info">
@@ -198,7 +191,6 @@
                     </div>
                 </div>
                 
-                <!-- Historique -->
                 <div class="chart-card">
                     <h3>📅 Informations de Création</h3>
                     <div class="history-info">
@@ -222,196 +214,33 @@
 <script>
     // Couleurs spécifiques pour chaque service
     const serviceColors = {
-        'TNT': '#ff4757',        // Rouge
-        'FM': '#2ed573',         // Vert
-        'AM': '#ffa502',         // Orange
-        'Administration': '#3742fa', // Bleu
-        'FH': '#8c7ae6',         // Violet
-        'ST': '#ff6b6b'          // Rouge clair
+        'TNT': '#ff4757',
+        'FM': '#2ed573',
+        'AM': '#ffa502',
+        'Administration': '#3742fa',
+        'FH': '#8c7ae6',
+        'ST': '#ff6b6b'
     };
 
-    // Couleurs pour les statuts
     const statusColors = {
-        active: '#4ade80',       // Vert pour actif
-        inactive: '#ef4444',     // Rouge pour inactif
-        control: '#22c55e',      // Vert pour en contrôle
-        noControl: '#dc2626'     // Rouge pour hors contrôle
+        active: '#4ade80',
+        inactive: '#ef4444',
+        control: '#22c55e',
+        noControl: '#dc2626'
     };
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const currentRight = sidebar.style.right;
-        if (currentRight === '0px') {
-            sidebar.style.right = '-200px';
-        } else {
-            sidebar.style.right = '0px';
-        }
-    }
-
-    // Données simulées des stations individuelles basées sur tes exemples
-    const stationsDetails = {
-        'jbel-lahdid': {
-            name: 'Jbel-lahdid',
-            province: 'Essaouira',
-            region: 'Marrakech-Safi',
-            snrt_rs: 'Marrakech',
-            latitude: 31.732778,
-            longitude: -9.453056,
-            altitude: 709,
-            category: 'G',
-            code: 4066,
-            gsm: '674908925',
-            config_user: 'h.zagrari',
-            creation_date: '2024-08-24',
-            control: true,
-            services: { TNT: true, FM: true, AM: false, Administration: false, FH: true, ST: false }
-        },
-        'jerada': {
-            name: 'Jerada',
-            province: 'Jerada',
-            region: "L'Oriental",
-            snrt_rs: 'Oujda',
-            latitude: 34.323333,
-            longitude: -2.155,
-            altitude: 1049,
-            category: 'P',
-            code: 4063,
-            gsm: '674908922',
-            config_user: 'h.zagrari',
-            creation_date: '2024-10-04',
-            control: false,
-            services: { TNT: true, FM: false, AM: false, Administration: false, FH: false, ST: false }
-        },
-        'kaf-el-ghar': {
-            name: 'Kaf El Ghar',
-            province: 'Taza',
-            region: 'Fès-Meknès',
-            snrt_rs: 'Fès-Meknès',
-            latitude: 34.536426,
-            longitude: -4.275644,
-            altitude: 1120,
-            category: 'P',
-            code: 4077,
-            gsm: '674908930',
-            config_user: 'm.benhmidou',
-            creation_date: '2024-07-04',
-            control: false,
-            services: { TNT: true, FM: true, AM: false, Administration: false, FH: false, ST: false }
-        },
-        'kelaat-mgouna': {
-            name: 'Kelaat-mgouna',
-            province: 'Tinghire',
-            region: 'Darâa-Tafilalet',
-            snrt_rs: 'Marrakech',
-            latitude: 31.237899,
-            longitude: -6.04806187,
-            altitude: 1439,
-            category: 'P',
-            code: 4104,
-            gsm: '674908945',
-            config_user: 'h.zagrari',
-            creation_date: '2024-08-24',
-            control: false,
-            services: { TNT: true, FM: true, AM: false, Administration: false, FH: false, ST: false }
-        },
-        // Stations supplémentaires
-        'agadir': {
-            name: 'Agadir',
-            province: 'Agadir-Ida-Ou-Tanane',
-            region: 'Souss-Massa',
-            snrt_rs: 'Agadir',
-            latitude: 30.4278,
-            longitude: -9.5981,
-            altitude: 56,
-            category: 'G',
-            code: 4001,
-            gsm: '674908901',
-            config_user: 's.hajji',
-            creation_date: '2024-05-15',
-            control: true,
-            services: { TNT: true, FM: true, AM: true, Administration: true, FH: true, ST: true }
-        },
-        'casablanca': {
-            name: 'Casablanca',
-            province: 'Casablanca',
-            region: 'Casablanca-Settat',
-            snrt_rs: 'Casablanca',
-            latitude: 33.5731,
-            longitude: -7.5898,
-            altitude: 50,
-            category: 'G',
-            code: 4002,
-            gsm: '674908902',
-            config_user: 'a.alami',
-            creation_date: '2024-03-10',
-            control: true,
-            services: { TNT: true, FM: true, AM: true, Administration: true, FH: true, ST: false }
-        },
-        'rabat': {
-            name: 'Rabat',
-            province: 'Rabat',
-            region: 'Rabat-Salé-Kénitra',
-            snrt_rs: 'Rabat',
-            latitude: 34.0209,
-            longitude: -6.8416,
-            altitude: 75,
-            category: 'G',
-            code: 4003,
-            gsm: '674908903',
-            config_user: 'k.bennani',
-            creation_date: '2024-02-20',
-            control: true,
-            services: { TNT: true, FM: true, AM: false, Administration: true, FH: true, ST: false }
-        },
-        'fes': {
-            name: 'Fès',
-            province: 'Fès',
-            region: 'Fès-Meknès',
-            snrt_rs: 'Fès-Meknès',
-            latitude: 34.0181,
-            longitude: -5.0078,
-            altitude: 410,
-            category: 'G',
-            code: 4004,
-            gsm: '674908904',
-            config_user: 'n.berrada',
-            creation_date: '2024-01-15',
-            control: false,
-            services: { TNT: true, FM: true, AM: true, Administration: false, FH: false, ST: false }
-        },
-        'marrakech': {
-            name: 'Marrakech',
-            province: 'Marrakech',
-            region: 'Marrakech-Safi',
-            snrt_rs: 'Marrakech',
-            latitude: 31.6295,
-            longitude: -7.9811,
-            altitude: 466,
-            category: 'G',
-            code: 4005,
-            gsm: '674908905',
-            config_user: 'h.zagrari',
-            creation_date: '2024-04-10',
-            control: true,
-            services: { TNT: true, FM: true, AM: false, Administration: true, FH: true, ST: true }
-        },
-        'tanger': {
-            name: 'Tanger',
-            province: 'Tanger-Assilah',
-            region: 'Tanger-Tétouan-Al Hoceïma',
-            snrt_rs: 'Tanger',
-            latitude: 35.7595,
-            longitude: -5.8340,
-            altitude: 20,
-            category: 'G',
-            code: 4006,
-            gsm: '674908906',
-            config_user: 'y.tazi',
-            creation_date: '2024-06-05',
-            control: true,
-            services: { TNT: true, FM: false, AM: true, Administration: false, FH: true, ST: false }
-        }
+    // Données provenant de MongoDB (Django context)
+    const mongoData = {
+        stats: {{ stats|safe }},
+        regions: {{ regions_data|safe }},
+        services: {{ services_data|safe }},
+        configUsers: {{ config_users_data|safe }},
+        categories: {{ category_data|safe }},
+        servicesByRegion: {{ services_by_region_data|safe }},
+        connected: {{ mongodb_connected|yesno:"true,false" }}
     };
+
+    console.log('Données MongoDB chargées:', mongoData);
 
     // Gestion du dropdown station
     document.getElementById('station-dropdown-btn').addEventListener('click', function() {
@@ -422,7 +251,6 @@
         arrow.style.transform = menu.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
     });
 
-    // Fermer le dropdown quand on clique ailleurs
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.dropdown-container')) {
             document.getElementById('station-dropdown-menu').classList.remove('show');
@@ -433,20 +261,15 @@
     // Filtrage par station
     document.querySelectorAll('#station-dropdown-menu .dropdown-item').forEach(item => {
         item.addEventListener('click', function() {
-            // Retirer la classe active de tous les items
             document.querySelectorAll('#station-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
-            // Ajouter la classe active à l'item cliqué
             this.classList.add('active');
             
-            // Mettre à jour le texte du bouton
             const selectedText = this.textContent;
             document.getElementById('station-selected').textContent = selectedText;
             
-            // Fermer le dropdown
             document.getElementById('station-dropdown-menu').classList.remove('show');
             document.querySelector('#station-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
             
-            // Afficher la vue correspondante
             const stationId = this.getAttribute('data-station');
             showStationView(stationId);
         });
@@ -466,28 +289,41 @@
         }
     }
 
-    function updateStationDetails(stationId) {
-        const station = stationsDetails[stationId];
-        if (!station) return;
+    function updateStationDetails(stationName) {
+        // Faire une requête AJAX pour récupérer les détails depuis MongoDB
+        fetch(`/dashboard/api/station-details/?station=${encodeURIComponent(stationName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const station = data.data;
+                    
+                    // Mettre à jour les informations
+                    document.getElementById('station-name').textContent = station.name;
+                    document.getElementById('station-province').textContent = station.province;
+                    document.getElementById('station-region').textContent = station.region;
+                    document.getElementById('station-snrt-rs').textContent = station.snrt_rs;
+                    document.getElementById('station-category').textContent = station.category;
+                    document.getElementById('station-gsm').textContent = station.gsm;
+                    document.getElementById('station-config-user').textContent = station.config_user;
+                    document.getElementById('station-latitude').textContent = station.latitude;
+                    document.getElementById('station-longitude').textContent = station.longitude;
+                    document.getElementById('station-altitude').textContent = `${station.altitude} m`;
+                    document.getElementById('station-code').textContent = station.code;
+                    document.getElementById('station-creation-date').textContent = station.creation_date;
+                    document.getElementById('station-creator').textContent = station.config_user;
 
-        // Mettre à jour les informations de la station
-        document.getElementById('station-name').textContent = station.name;
-        document.getElementById('station-province').textContent = station.province;
-        document.getElementById('station-region').textContent = station.region;
-        document.getElementById('station-snrt-rs').textContent = station.snrt_rs;
-        document.getElementById('station-category').textContent = station.category;
-        document.getElementById('station-gsm').textContent = station.gsm;
-        document.getElementById('station-config-user').textContent = station.config_user;
-        document.getElementById('station-latitude').textContent = station.latitude.toFixed(6);
-        document.getElementById('station-longitude').textContent = station.longitude.toFixed(6);
-        document.getElementById('station-altitude').textContent = `${station.altitude} m`;
-        document.getElementById('station-code').textContent = station.code;
-        document.getElementById('station-creation-date').textContent = station.creation_date;
-        document.getElementById('station-creator').textContent = station.config_user;
-
-        // Créer le diagramme des services
-        createStationServicesChart(station.services);
-        createStationControlChart(station.control);
+                    // Créer les graphiques
+                    createStationServicesChart(station.services);
+                    createStationControlChart(station.control);
+                } else {
+                    console.error('Erreur lors de la récupération des détails:', data.error);
+                    alert('Station non trouvée dans la base de données MongoDB');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur AJAX:', error);
+                alert('Erreur de connexion au serveur');
+            });
     }
 
     function createStationServicesChart(services) {
@@ -501,9 +337,6 @@
         const backgroundColors = serviceLabels.map(service => 
             services[service] ? serviceColors[service] : '#6b7280'
         );
-        const borderColors = serviceLabels.map(service => 
-            services[service] ? serviceColors[service] : '#4b5563'
-        );
 
         ctx.chart = new Chart(ctx.getContext('2d'), {
             type: 'doughnut',
@@ -512,7 +345,7 @@
                 datasets: [{
                     data: serviceValues,
                     backgroundColor: backgroundColors,
-                    borderColor: borderColors,
+                    borderColor: backgroundColors,
                     borderWidth: 2
                 }]
             },
@@ -569,197 +402,175 @@
             }
         });
     }
-    const stationsData = {
-        regions: ['Marrakech', 'Oujda', 'Fès-Meknès', 'Casablanca', 'Rabat', 'Tanger', 'Agadir'],
-        stationCounts: [67, 45, 52, 78, 32, 28, 34],
-        
-        services: ['TNT', 'FM', 'AM', 'FH', 'ST', 'Administration'],
-        serviceCounts: [245, 178, 23, 89, 34, 67],
-        
-        configUsers: ['h.zagrari', 'm.benhmidou', 'a.alami', 's.hajji', 'n.berrada'],
-        userCounts: [89, 67, 45, 56, 34],
-        
-        categories: ['G', 'P', 'S'],
-        categoryCounts: [156, 98, 37]
-    };
-
-    // Couleurs cohérentes avec le design
-    const colors = {
-        primary: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4', '#f72585', '#4cc9f0'],
-        gradient: ['rgba(255, 107, 107, 0.8)', 'rgba(255, 165, 0, 0.8)', 'rgba(102, 126, 234, 0.8)', 'rgba(118, 75, 162, 0.8)', 'rgba(72, 202, 228, 0.8)', 'rgba(247, 37, 133, 0.8)', 'rgba(76, 201, 240, 0.8)']
-    };
 
     // Configuration par défaut des graphiques
     Chart.defaults.color = '#e0e0e0';
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
-    // 1. Graphique Régions SNRT
-    const regionCtx = document.getElementById('regionChart').getContext('2d');
-    new Chart(regionCtx, {
-        type: 'doughnut',
-        data: {
-            labels: stationsData.regions,
-            datasets: [{
-                data: stationsData.stationCounts,
-                backgroundColor: colors.gradient,
-                borderColor: colors.primary,
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#e0e0e0' }
-                }
-            }
-        }
-    });
+    // Vérifier si MongoDB est connecté
+    if (!mongoData.connected) {
+        console.warn('MongoDB non connecté, impossibilité d\'afficher les données réelles');
+    }
 
-    // 2. Graphique Services avec couleurs spécifiques
-    const servicesCtx = document.getElementById('servicesChart').getContext('2d');
-    new Chart(servicesCtx, {
-        type: 'bar',
-        data: {
-            labels: stationsData.services,
-            datasets: [{
-                label: 'Nombre de Services',
-                data: stationsData.serviceCounts,
-                backgroundColor: stationsData.services.map(service => serviceColors[service] || '#667eea'),
-                borderColor: stationsData.services.map(service => serviceColors[service] || '#667eea'),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
+    // Créer les graphiques avec les données MongoDB
+    if (mongoData.connected && mongoData.regions.regions.length > 0) {
+        // 1. Graphique Régions SNRT (données réelles)
+        const regionCtx = document.getElementById('regionChart').getContext('2d');
+        new Chart(regionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: mongoData.regions.regions,
+                datasets: [{
+                    data: mongoData.regions.counts,
+                    backgroundColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4', '#f72585', '#4cc9f0'],
+                    borderColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4', '#f72585', '#4cc9f0'],
+                    borderWidth: 2
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: '#e0e0e0' },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                },
-                x: {
-                    ticks: { color: '#e0e0e0' },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e0e0e0' }
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // 3. Graphique ConfigUser
-    const configUserCtx = document.getElementById('configUserChart').getContext('2d');
-    new Chart(configUserCtx, {
-        type: 'pie',
-        data: {
-            labels: stationsData.configUsers,
-            datasets: [{
-                data: stationsData.userCounts,
-                backgroundColor: colors.gradient,
-                borderColor: colors.primary,
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#e0e0e0' }
-                }
-            }
-        }
-    });
-
-    // 4. Graphique Catégories
-    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
-        type: 'polarArea',
-        data: {
-            labels: ['Catégorie G', 'Catégorie P', 'Catégorie S'],
-            datasets: [{
-                data: stationsData.categoryCounts,
-                backgroundColor: colors.gradient.slice(0, 3),
-                borderColor: colors.primary.slice(0, 3),
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: '#e0e0e0' }
-                }
+        // 2. Graphique Services (données réelles)
+        const servicesCtx = document.getElementById('servicesChart').getContext('2d');
+        new Chart(servicesCtx, {
+            type: 'bar',
+            data: {
+                labels: mongoData.services.services,
+                datasets: [{
+                    label: 'Nombre de Services',
+                    data: mongoData.services.counts,
+                    backgroundColor: mongoData.services.services.map(service => serviceColors[service] || '#667eea'),
+                    borderColor: mongoData.services.services.map(service => serviceColors[service] || '#667eea'),
+                    borderWidth: 1
+                }]
             },
-            scales: {
-                r: {
-                    ticks: { color: '#e0e0e0' },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
                 }
             }
-        }
-    });
+        });
 
-    // 5. Graphique Services par Région avec couleurs spécifiques
-    const servicesRegionCtx = document.getElementById('servicesRegionChart').getContext('2d');
-    new Chart(servicesRegionCtx, {
-        type: 'line',
-        data: {
-            labels: stationsData.regions,
-            datasets: [
-                {
-                    label: 'TNT',
-                    data: [45, 32, 38, 56, 22, 18, 24],
-                    borderColor: serviceColors.TNT,
-                    backgroundColor: serviceColors.TNT + '20',
-                    tension: 0.4
-                },
-                {
-                    label: 'FM',
-                    data: [34, 28, 31, 42, 18, 15, 19],
-                    borderColor: serviceColors.FM,
-                    backgroundColor: serviceColors.FM + '20',
-                    tension: 0.4
-                },
-                {
-                    label: 'FH',
-                    data: [12, 8, 15, 18, 7, 5, 9],
-                    borderColor: serviceColors.FH,
-                    backgroundColor: serviceColors.FH + '20',
-                    tension: 0.4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: { color: '#e0e0e0' }
-                }
+        // 3. Graphique ConfigUser (données réelles)
+        const configUserCtx = document.getElementById('configUserChart').getContext('2d');
+        new Chart(configUserCtx, {
+            type: 'pie',
+            data: {
+                labels: mongoData.configUsers.users,
+                datasets: [{
+                    data: mongoData.configUsers.counts,
+                    backgroundColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4'],
+                    borderColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4'],
+                    borderWidth: 2
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: '#e0e0e0' },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
-                },
-                x: {
-                    ticks: { color: '#e0e0e0' },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e0e0e0' }
+                    }
                 }
             }
-        }
-    });
+        });
+
+        // 4. Graphique Catégories (données réelles)
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'polarArea',
+            data: {
+                labels: mongoData.categories.categories,
+                datasets: [{
+                    data: mongoData.categories.counts,
+                    backgroundColor: ['rgba(255, 107, 107, 0.8)', 'rgba(255, 165, 0, 0.8)', 'rgba(102, 126, 234, 0.8)'],
+                    borderColor: ['#ff6b6b', '#ffa500', '#667eea'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e0e0e0' }
+                    }
+                },
+                scales: {
+                    r: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+
+        // 5. Graphique Services par Région (données réelles)
+        const servicesRegionCtx = document.getElementById('servicesRegionChart').getContext('2d');
+        const datasets = mongoData.servicesByRegion.datasets.map(dataset => ({
+            label: dataset.label,
+            data: dataset.data,
+            borderColor: serviceColors[dataset.label] || '#667eea',
+            backgroundColor: (serviceColors[dataset.label] || '#667eea') + '20',
+            tension: 0.4
+        }));
+
+        new Chart(servicesRegionCtx, {
+            type: 'line',
+            data: {
+                labels: mongoData.servicesByRegion.regions,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#e0e0e0' }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+    } else {
+        // Afficher un message si pas de données
+        console.warn('Aucune donnée MongoDB disponible pour les graphiques');
+    }
 </script>
 
 <style>
@@ -811,8 +622,21 @@
         font-size: 1.2rem;
         margin-bottom: 40px;
     }
+
+    .error-message {
+        text-align: center;
+        color: #ff6b6b;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+        padding: 15px;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 10px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
     
-    /* Container de filtrage avec z-index élevé */
     .filter-container {
         background: rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(15px);
@@ -836,7 +660,6 @@
         text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
     
-    /* Dropdowns avec z-index très élevé */
     .dropdown-container {
         position: relative;
         display: inline-block;
@@ -921,7 +744,6 @@
         color: white;
     }
 
-    /* Vue station individuelle */
     .station-info-container {
         margin-bottom: 30px;
     }
@@ -970,7 +792,6 @@
         font-weight: bold;
     }
     
-    /* Informations géographiques et historique */
     .geo-info, .history-info {
         height: 100%;
         display: flex;
@@ -999,7 +820,6 @@
         font-weight: bold;
     }
     
-    /* Cartes de statistiques rapides */
     .stats-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -1045,7 +865,6 @@
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     
-    /* Container des graphiques */
     .charts-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));

@@ -132,11 +132,25 @@ import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Configuration MongoDB pour SNRT
+MONGODB_SETTINGS = {
+    'host': 'mongodb://localhost:27017/',
+    'database': 'snrt'
+}
 
-# Configuration MongoDB séparée
-MONGO_DB_NAME = 'installations_techniques'
-MONGO_HOST = 'localhost'
-MONGO_PORT = 27017
+# Collections disponibles
+SNRT_COLLECTIONS = {
+    'MATERIAL_STATION': 'material station',
+    'MATERIAL_STATION_FAMILY': 'material station family',
+    'MATERIAL_STATION_DESIGNATION': 'material station designation',
+    'MATERIAL_STATION_EGPT': 'material station egpt',
+    'MATERIAL_STATION_MARK': 'material station mark',
+    'MATERIAL_STATION_SERVICE': 'material station service',
+    'MATERIAL_STATION_SITE': 'material station site',
+    'MATERIAL_STATION_SUBFAMILY': 'material station subfamily',
+    'STAFF_SITE': 'staff site',
+    'ACHAT_FAMILY': 'achat family',
+}
 
 # configuration Django normale pour l'admin
 DATABASES = {
