@@ -61,12 +61,12 @@ snrt_service = SNRTMongoService()
 def get_dashboard_stats():
     """Récupère les statistiques principales pour le dashboard basées sur tes données réelles"""
     try:
-        # Récupérer toutes les stations depuis staff site (données principales)
+        # Récupérer tous les sites depuis staff site
         staff_sites = snrt_service.get_collection_data('staff site')
         
         if not staff_sites:
             return {
-                'total_stations': 0,
+                'total_sites': 0,
                 'services_tnt': 0,
                 'services_fm': 0,
                 'control_count': 0
@@ -80,11 +80,11 @@ def get_dashboard_stats():
         services_st = sum(1 for site in staff_sites if site.get('ST') is True)
         services_admin = sum(1 for site in staff_sites if site.get('Administration') is True)
         
-        # Compter les stations en contrôle
+        # Compter les sites en contrôle
         control_count = sum(1 for site in staff_sites if site.get('control') is True)
         
         return {
-            'total_stations': len(staff_sites),
+            'total_sites': len(staff_sites),
             'services_tnt': services_tnt,
             'services_fm': services_fm,
             'services_am': services_am,
@@ -97,7 +97,7 @@ def get_dashboard_stats():
     except Exception as e:
         logger.error(f"Erreur lors du calcul des stats: {e}")
         return {
-            'total_stations': 0,
+            'total_sites': 0,
             'services_tnt': 0,
             'services_fm': 0,
             'services_am': 0,
@@ -105,12 +105,12 @@ def get_dashboard_stats():
         }
 
 def get_region_distribution():
-    """Récupère la répartition des stations par région SNRT_RS"""
+    """Récupère la répartition des sites par région SNRT_RS avec couleurs spécifiques"""
     try:
         staff_sites = snrt_service.get_collection_data('staff site')
         
         if not staff_sites:
-            return {'regions': [], 'counts': []}
+            return {'regions': [], 'counts': [], 'colors': []}
         
         # Compter par SNRT_RS (région SNRT)
         region_counter = Counter()
@@ -119,20 +119,38 @@ def get_region_distribution():
             if snrt_rs:
                 region_counter[snrt_rs] += 1
         
-        # Trier par nombre de stations (décroissant)
+        # Trier par nombre de sites (décroissant)
         sorted_regions = region_counter.most_common()
         
         regions = [region for region, count in sorted_regions]
         counts = [count for region, count in sorted_regions]
         
+        # Couleurs spécifiques pour chaque région
+        region_colors = {
+            'Agadir': '#ff6b6b',      # Rouge
+            'Casablanca': '#4ecdc4',  # Turquoise
+            'Rabat': '#45b7d1',       # Bleu
+            'Fes': '#96ceb4',         # Vert
+            'Marrakech': '#ffeaa7',   # Jaune
+            'Oujda': '#a29bfe',       # Violet
+            'Tanger': '#fd79a8',      # Rose
+            'Laayoune': '#fdcb6e',    # Orange
+            'Meknes': '#6c5ce7',      # Indigo
+            'Taza': '#fd79a8'         # Rose clair
+        }
+        
+        # Assigner les couleurs ou couleur par défaut
+        colors = [region_colors.get(region, '#95a5a6') for region in regions]
+        
         return {
             'regions': regions,
-            'counts': counts
+            'counts': counts,
+            'colors': colors
         }
         
     except Exception as e:
         logger.error(f"Erreur région distribution: {e}")
-        return {'regions': [], 'counts': []}
+        return {'regions': [], 'counts': [], 'colors': []}
 
 def get_services_distribution():
     """Récupère la répartition des services (TNT, FM, AM, etc.)"""
@@ -140,7 +158,7 @@ def get_services_distribution():
         staff_sites = snrt_service.get_collection_data('staff site')
         
         if not staff_sites:
-            return {'services': [], 'counts': []}
+            return {'services': [], 'counts': [], 'colors': []}
         
         # Compter chaque type de service
         service_counts = {
@@ -152,55 +170,40 @@ def get_services_distribution():
             'Administration': sum(1 for site in staff_sites if site.get('Administration') is True)
         }
         
+        # Couleurs spécifiques pour les services
+        service_colors = {
+            'TNT': '#ff4757',
+            'FM': '#2ed573',
+            'AM': '#ffa502',
+            'Administration': '#3742fa',
+            'FH': '#8c7ae6',
+            'ST': '#ff6b6b'
+        }
+        
         # Filtrer les services qui ont au moins 1 occurrence
         filtered_services = {k: v for k, v in service_counts.items() if v > 0}
         
+        services = list(filtered_services.keys())
+        counts = list(filtered_services.values())
+        colors = [service_colors.get(service, '#95a5a6') for service in services]
+        
         return {
-            'services': list(filtered_services.keys()),
-            'counts': list(filtered_services.values())
+            'services': services,
+            'counts': counts,
+            'colors': colors
         }
         
     except Exception as e:
         logger.error(f"Erreur services distribution: {e}")
-        return {'services': [], 'counts': []}
-
-def get_config_users_distribution():
-    """Récupère la répartition par ConfigUser"""
-    try:
-        staff_sites = snrt_service.get_collection_data('staff site')
-        
-        if not staff_sites:
-            return {'users': [], 'counts': []}
-        
-        # Compter par ConfigUser
-        user_counter = Counter()
-        for site in staff_sites:
-            config_user = site.get('ConfigUser')
-            if config_user:
-                user_counter[config_user] += 1
-        
-        # Trier par nombre de stations (décroissant)
-        sorted_users = user_counter.most_common()
-        
-        users = [user for user, count in sorted_users]
-        counts = [count for user, count in sorted_users]
-        
-        return {
-            'users': users,
-            'counts': counts
-        }
-        
-    except Exception as e:
-        logger.error(f"Erreur config users: {e}")
-        return {'users': [], 'counts': []}
+        return {'services': [], 'counts': [], 'colors': []}
 
 def get_category_distribution():
-    """Récupère la répartition par catégorie"""
+    """Récupère la répartition par catégorie en style bar chart"""
     try:
         staff_sites = snrt_service.get_collection_data('staff site')
         
         if not staff_sites:
-            return {'categories': [], 'counts': []}
+            return {'categories': [], 'counts': [], 'colors': []}
         
         # Compter par Category
         category_counter = Counter()
@@ -215,17 +218,29 @@ def get_category_distribution():
         categories = [f"Catégorie {cat}" for cat, count in sorted_categories]
         counts = [count for cat, count in sorted_categories]
         
+        # Couleurs pour les catégories
+        category_colors = {
+            'Catégorie G': '#e17055',
+            'Catégorie P': '#74b9ff',
+            'Catégorie S': '#00b894',
+            'Catégorie M': '#a29bfe',
+            'Catégorie L': '#fd79a8'
+        }
+        
+        colors = [category_colors.get(cat, '#95a5a6') for cat in categories]
+        
         return {
             'categories': categories,
-            'counts': counts
+            'counts': counts,
+            'colors': colors
         }
         
     except Exception as e:
         logger.error(f"Erreur category distribution: {e}")
-        return {'categories': [], 'counts': []}
+        return {'categories': [], 'counts': [], 'colors': []}
 
 def get_services_by_region():
-    """Récupère la répartition des services par région pour le graphique en ligne"""
+    """Récupère la répartition des services par région en style bar chart"""
     try:
         staff_sites = snrt_service.get_collection_data('staff site')
         
@@ -255,7 +270,17 @@ def get_services_by_region():
         
         regions = list(regions_data.keys())
         
-        # Créer les datasets pour chaque service
+        # Couleurs pour les services
+        service_colors = {
+            'TNT': '#ff4757',
+            'FM': '#2ed573',
+            'AM': '#ffa502',
+            'Administration': '#3742fa',
+            'FH': '#8c7ae6',
+            'ST': '#ff6b6b'
+        }
+        
+        # Créer les datasets pour chaque service en style bar
         datasets = []
         service_types = ['TNT', 'FM', 'AM', 'FH', 'ST', 'Administration']
         
@@ -265,7 +290,10 @@ def get_services_by_region():
             if sum(data) > 0:
                 datasets.append({
                     'label': service,
-                    'data': data
+                    'data': data,
+                    'backgroundColor': service_colors.get(service, '#95a5a6'),
+                    'borderColor': service_colors.get(service, '#95a5a6'),
+                    'borderWidth': 1
                 })
         
         return {
@@ -277,55 +305,55 @@ def get_services_by_region():
         logger.error(f"Erreur services by region: {e}")
         return {'regions': [], 'datasets': []}
 
-def get_station_details(station_name):
-    """Récupère les détails d'une station spécifique par son nom de site"""
+def get_site_details(site_name):
+    """Récupère les détails d'un site spécifique par son nom"""
     try:
-        # Chercher par Site (nom de la station)
-        station_data = snrt_service.get_collection_data(
+        # Chercher par Site (nom du site)
+        site_data = snrt_service.get_collection_data(
             'staff site',
-            {'Site': station_name}
+            {'Site': site_name}
         )
         
-        if not station_data:
+        if not site_data:
             return None
         
         # Retourner le premier résultat
-        station = station_data[0]
+        site = site_data[0]
         
         # Analyser les services
         services = {
-            'TNT': station.get('TNT', False),
-            'FM': station.get('FM', False),
-            'AM': station.get('AM', False),
-            'FH': station.get('FH', False),
-            'ST': station.get('ST', False),
-            'Administration': station.get('Administration', False)
+            'TNT': site.get('TNT', False),
+            'FM': site.get('FM', False),
+            'AM': site.get('AM', False),
+            'FH': site.get('FH', False),
+            'ST': site.get('ST', False),
+            'Administration': site.get('Administration', False)
         }
         
         return {
-            'name': station.get('Site', ''),
-            'province': station.get('Province', ''),
-            'region': station.get('Region', ''),
-            'snrt_rs': station.get('SNRT_RS', ''),
-            'latitude': station.get('Latitude', 0),
-            'longitude': station.get('Longitude', 0),
-            'altitude': station.get('Altitude', 0),
-            'category': station.get('Category', ''),
-            'gsm': station.get('Gsm', ''),
-            'config_user': station.get('ConfigUser', ''),
-            'creation_date': station.get('CreationDate', ''),
-            'control': station.get('control', False),
+            'name': site.get('Site', ''),
+            'province': site.get('Province', ''),
+            'region': site.get('Region', ''),
+            'snrt_rs': site.get('SNRT_RS', ''),
+            'latitude': site.get('Latitude', 0),
+            'longitude': site.get('Longitude', 0),
+            'altitude': site.get('Altitude', 0),
+            'category': site.get('Category', ''),
+            'gsm': site.get('Gsm', ''),
+            'config_user': site.get('ConfigUser', ''),
+            'creation_date': site.get('CreationDate', ''),
+            'control': site.get('control', False),
             'services': services,
-            'code': station.get('_id', ''),
-            'photo': station.get('Photo', '')
+            'code': site.get('_id', ''),
+            'photo': site.get('Photo', '')
         }
         
     except Exception as e:
-        logger.error(f"Erreur détails station: {e}")
+        logger.error(f"Erreur détails site: {e}")
         return None
 
-def get_all_station_names():
-    """Récupère tous les noms de stations disponibles"""
+def get_all_site_names():
+    """Récupère tous les noms de sites disponibles"""
     try:
         staff_sites = snrt_service.get_collection_data('staff site')
         
@@ -333,21 +361,21 @@ def get_all_station_names():
             return []
         
         # Extraire tous les noms de sites
-        station_names = []
+        site_names = []
         for site in staff_sites:
             site_name = site.get('Site')
             if site_name:
-                station_names.append({
+                site_names.append({
                     'name': site_name,
                     'display_name': site_name.replace('-', ' ').title(),
                     'slug': site_name.lower().replace(' ', '-')
                 })
         
         # Trier alphabétiquement
-        station_names.sort(key=lambda x: x['name'])
+        site_names.sort(key=lambda x: x['name'])
         
-        return station_names
+        return site_names
         
     except Exception as e:
-        logger.error(f"Erreur récupération noms stations: {e}")
+        logger.error(f"Erreur récupération noms sites: {e}")
         return []

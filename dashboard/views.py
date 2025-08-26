@@ -7,11 +7,10 @@ from .services import (
     get_dashboard_stats, 
     get_region_distribution, 
     get_services_distribution,
-    get_station_details,
-    get_config_users_distribution,
+    get_site_details,
     get_category_distribution,
     get_services_by_region,
-    get_all_station_names,
+    get_all_site_names,
     snrt_service
 )
 
@@ -24,24 +23,22 @@ def dashboard_view(request):
         stats = get_dashboard_stats()
         region_data = get_region_distribution()
         services_data = get_services_distribution()
-        config_users_data = get_config_users_distribution()
         category_data = get_category_distribution()
         services_by_region_data = get_services_by_region()
-        station_names = get_all_station_names()
+        site_names = get_all_site_names()
         
         # Préparer le contexte avec UNIQUEMENT les données MongoDB
         context = {
             'stats': stats,
             'regions_data': region_data,
             'services_data': services_data,
-            'config_users_data': config_users_data,
             'category_data': category_data,
             'services_by_region_data': services_by_region_data,
-            'station_names': station_names,
+            'site_names': site_names,
             'mongodb_connected': True
         }
         
-        logger.info(f"Dashboard chargé avec {stats['total_stations']} stations depuis MongoDB")
+        logger.info(f"Dashboard chargé avec {stats['total_sites']} sites depuis MongoDB")
         
         return render(request, 'dashboard/tableau.html', context)
         
@@ -52,17 +49,16 @@ def dashboard_view(request):
             'mongodb_connected': False,
             'error_message': f"Erreur de connexion à MongoDB: {str(e)}",
             'stats': {
-                'total_stations': 0,
+                'total_sites': 0,
                 'services_tnt': 0,
                 'services_fm': 0,
                 'control_count': 0
             },
-            'regions_data': {'regions': [], 'counts': []},
-            'services_data': {'services': [], 'counts': []},
-            'config_users_data': {'users': [], 'counts': []},
-            'category_data': {'categories': [], 'counts': []},
+            'regions_data': {'regions': [], 'counts': [], 'colors': []},
+            'services_data': {'services': [], 'counts': [], 'colors': []},
+            'category_data': {'categories': [], 'counts': [], 'colors': []},
             'services_by_region_data': {'regions': [], 'datasets': []},
-            'station_names': []
+            'site_names': []
         }
         return render(request, 'dashboard/tableau.html', context)
 
@@ -76,8 +72,6 @@ def chart_data_api(request):
             data = get_region_distribution()
         elif chart_type == 'services':
             data = get_services_distribution()
-        elif chart_type == 'config_users':
-            data = get_config_users_distribution()
         elif chart_type == 'categories':
             data = get_category_distribution()
         elif chart_type == 'services_by_region':
@@ -102,19 +96,19 @@ def chart_data_api(request):
         }, status=500)
 
 @csrf_exempt
-def station_details_api(request):
-    """API pour récupérer les détails d'une station (données réelles MongoDB)"""
+def site_details_api(request):
+    """API pour récupérer les détails d'un site (données réelles MongoDB)"""
     try:
-        station_name = request.GET.get('station')
-        if not station_name:
-            return JsonResponse({'error': 'Nom de station requis'}, status=400)
+        site_name = request.GET.get('site')
+        if not site_name:
+            return JsonResponse({'error': 'Nom de site requis'}, status=400)
         
-        details = get_station_details(station_name)
+        details = get_site_details(site_name)
         
         if not details:
             return JsonResponse({
-                'error': 'Station non trouvée dans MongoDB',
-                'station': station_name
+                'error': 'Site non trouvé dans MongoDB',
+                'site': site_name
             }, status=404)
         
         return JsonResponse({
@@ -124,7 +118,7 @@ def station_details_api(request):
         })
         
     except Exception as e:
-        logger.error(f"Erreur station details: {e}")
+        logger.error(f"Erreur site details: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -138,10 +132,9 @@ def refresh_data_api(request):
             'stats': get_dashboard_stats(),
             'regions': get_region_distribution(),
             'services': get_services_distribution(),
-            'config_users': get_config_users_distribution(),
             'categories': get_category_distribution(),
             'services_by_region': get_services_by_region(),
-            'station_names': get_all_station_names()
+            'site_names': get_all_site_names()
         }
         
         return JsonResponse({
@@ -195,7 +188,7 @@ def mongodb_test_view(request):
             'stats': get_dashboard_stats(),
             'regions_count': len(get_region_distribution()['regions']),
             'services_count': len(get_services_distribution()['services']),
-            'users_count': len(get_config_users_distribution()['users'])
+            'categories_count': len(get_category_distribution()['categories'])
         }
         
         client.close()
@@ -247,20 +240,20 @@ def collection_data_view(request, collection_name):
             'error': str(e)
         }, status=500)
 
-def stations_list_api(request):
-    """API pour récupérer la liste de toutes les stations"""
+def sites_list_api(request):
+    """API pour récupérer la liste de tous les sites"""
     try:
-        stations = get_all_station_names()
+        sites = get_all_site_names()
         
         return JsonResponse({
             'success': True,
-            'count': len(stations),
-            'stations': stations,
+            'count': len(sites),
+            'sites': sites,
             'source': 'mongodb'
         })
         
     except Exception as e:
-        logger.error(f"Erreur stations list: {e}")
+        logger.error(f"Erreur sites list: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)

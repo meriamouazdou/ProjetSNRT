@@ -13,27 +13,27 @@
     </div>
 
     <main class="main-content">
-        <h1>Tableau de Bord des Stations SNRT</h1>
+        <h1>Tableau de Bord des Sites SNRT</h1>
         {% if mongodb_connected %}
-            <p class="welcome-text">Données en temps réel depuis MongoDB - {{ stats.total_stations }} stations</p>
+            <p class="welcome-text">Données en temps réel depuis MongoDB - {{ stats.total_sites }} sites</p>
         {% else %}
             <div class="error-message">
                 ⚠️ {{ error_message }}
             </div>
         {% endif %}
         
-        <!-- Filtrage par station -->
+        <!-- Filtrage par site -->
         <div class="filter-container">
-            <h2>🔍 Filtrage par Station</h2>
+            <h2>🔍 Filtrage par Site</h2>
             <div class="dropdown-container">
-                <button class="dropdown-btn" id="station-dropdown-btn">
-                    <span id="station-selected">Toutes les stations</span>
+                <button class="dropdown-btn" id="site-dropdown-btn">
+                    <span id="site-selected">Tous les sites</span>
                     <span class="dropdown-arrow">▼</span>
                 </button>
-                <div class="dropdown-menu" id="station-dropdown-menu">
-                    <div class="dropdown-item active" data-station="all">Toutes les stations</div>
-                    {% for station in station_names %}
-                        <div class="dropdown-item" data-station="{{ station.name }}">{{ station.display_name }}</div>
+                <div class="dropdown-menu" id="site-dropdown-menu">
+                    <div class="dropdown-item active" data-site="all">Tous les sites</div>
+                    {% for site in site_names %}
+                        <div class="dropdown-item" data-site="{{ site.name }}">{{ site.display_name }}</div>
                     {% endfor %}
                 </div>
             </div>
@@ -46,8 +46,8 @@
                 <div class="stat-card">
                     <div class="stat-icon">🗼</div>
                     <div class="stat-info">
-                        <h3>Total Stations</h3>
-                        <p class="stat-number">{{ stats.total_stations }}</p>
+                        <h3>Total Sites</h3>
+                        <p class="stat-number">{{ stats.total_sites }}</p>
                     </div>
                 </div>
                 
@@ -78,7 +78,7 @@
 
             <!-- Diagrammes avec données MongoDB -->
             <div class="charts-container">
-                <!-- Diagramme par Région SNRT -->
+                <!-- Diagramme par Région SNRT avec couleurs spécifiques -->
                 <div class="chart-card">
                     <h3>📊 Répartition par Région SNRT</h3>
                     <div class="chart-wrapper">
@@ -94,15 +94,7 @@
                     </div>
                 </div>
                 
-                <!-- Diagramme ConfigUser -->
-                <div class="chart-card">
-                    <h3>👥 Configurations par Utilisateur</h3>
-                    <div class="chart-wrapper">
-                        <canvas id="configUserChart"></canvas>
-                    </div>
-                </div>
-                
-                <!-- Diagramme Catégories -->
+                <!-- Diagramme Catégories en Bar Chart -->
                 <div class="chart-card">
                     <h3>🔗 Répartition par Catégorie</h3>
                     <div class="chart-wrapper">
@@ -110,7 +102,7 @@
                     </div>
                 </div>
                 
-                <!-- Diagramme Services par Région -->
+                <!-- Diagramme Services par Région en Bar Chart -->
                 <div class="chart-card full-width">
                     <h3>📉 Services par Région SNRT</h3>
                     <div class="chart-wrapper">
@@ -120,35 +112,35 @@
             </div>
         </div>
 
-        <!-- Vue station individuelle -->
-        <div id="station-view" style="display: none;">
-            <div class="station-info-container">
-                <div class="station-info-card">
-                    <h2 id="station-name">Station Name</h2>
-                    <div class="station-details">
+        <!-- Vue site individuel -->
+        <div id="site-view" style="display: none;">
+            <div class="site-info-container">
+                <div class="site-info-card">
+                    <h2 id="site-name">Site Name</h2>
+                    <div class="site-details">
                         <div class="detail-item">
                             <span class="detail-label">📍 Province:</span>
-                            <span id="station-province">-</span>
+                            <span id="site-province">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">🗺️ Région:</span>
-                            <span id="station-region">-</span>
+                            <span id="site-region">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">🏢 SNRT RS:</span>
-                            <span id="station-snrt-rs">-</span>
+                            <span id="site-snrt-rs">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">📊 Catégorie:</span>
-                            <span id="station-category">-</span>
+                            <span id="site-category">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">📞 GSM:</span>
-                            <span id="station-gsm">-</span>
+                            <span id="site-gsm">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">⚙️ Config User:</span>
-                            <span id="station-config-user">-</span>
+                            <span id="site-config-user">-</span>
                         </div>
                     </div>
                 </div>
@@ -158,14 +150,14 @@
                 <div class="chart-card">
                     <h3>📡 Services Installés</h3>
                     <div class="chart-wrapper">
-                        <canvas id="stationServicesChart"></canvas>
+                        <canvas id="siteServicesChart"></canvas>
                     </div>
                 </div>
                 
                 <div class="chart-card">
                     <h3>🔧 Status de Contrôle</h3>
                     <div class="chart-wrapper">
-                        <canvas id="stationControlChart"></canvas>
+                        <canvas id="siteControlChart"></canvas>
                     </div>
                 </div>
                 
@@ -174,19 +166,19 @@
                     <div class="geo-info">
                         <div class="geo-item">
                             <span class="geo-label">🌐 Latitude:</span>
-                            <span id="station-latitude">-</span>
+                            <span id="site-latitude">-</span>
                         </div>
                         <div class="geo-item">
                             <span class="geo-label">🌐 Longitude:</span>
-                            <span id="station-longitude">-</span>
+                            <span id="site-longitude">-</span>
                         </div>
                         <div class="geo-item">
                             <span class="geo-label">⛰️ Altitude:</span>
-                            <span id="station-altitude">- m</span>
+                            <span id="site-altitude">- m</span>
                         </div>
                         <div class="geo-item">
                             <span class="geo-label">🏷️ Code:</span>
-                            <span id="station-code">-</span>
+                            <span id="site-code">-</span>
                         </div>
                     </div>
                 </div>
@@ -196,11 +188,11 @@
                     <div class="history-info">
                         <div class="history-item">
                             <span class="history-label">📅 Date de création:</span>
-                            <span id="station-creation-date">-</span>
+                            <span id="site-creation-date">-</span>
                         </div>
                         <div class="history-item">
                             <span class="history-label">👤 Créé par:</span>
-                            <span id="station-creator">-</span>
+                            <span id="site-creator">-</span>
                         </div>
                     </div>
                 </div>
@@ -234,7 +226,6 @@
         stats: {{ stats|safe }},
         regions: {{ regions_data|safe }},
         services: {{ services_data|safe }},
-        configUsers: {{ config_users_data|safe }},
         categories: {{ category_data|safe }},
         servicesByRegion: {{ services_by_region_data|safe }},
         connected: {{ mongodb_connected|yesno:"true,false" }}
@@ -242,9 +233,9 @@
 
     console.log('Données MongoDB chargées:', mongoData);
 
-    // Gestion du dropdown station
-    document.getElementById('station-dropdown-btn').addEventListener('click', function() {
-        const menu = document.getElementById('station-dropdown-menu');
+    // Gestion du dropdown site
+    document.getElementById('site-dropdown-btn').addEventListener('click', function() {
+        const menu = document.getElementById('site-dropdown-menu');
         const arrow = this.querySelector('.dropdown-arrow');
         
         menu.classList.toggle('show');
@@ -253,71 +244,71 @@
 
     document.addEventListener('click', function(event) {
         if (!event.target.closest('.dropdown-container')) {
-            document.getElementById('station-dropdown-menu').classList.remove('show');
-            document.querySelector('#station-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+            document.getElementById('site-dropdown-menu').classList.remove('show');
+            document.querySelector('#site-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
         }
     });
 
-    // Filtrage par station
-    document.querySelectorAll('#station-dropdown-menu .dropdown-item').forEach(item => {
+    // Filtrage par site
+    document.querySelectorAll('#site-dropdown-menu .dropdown-item').forEach(item => {
         item.addEventListener('click', function() {
-            document.querySelectorAll('#station-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
+            document.querySelectorAll('#site-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
             this.classList.add('active');
             
             const selectedText = this.textContent;
-            document.getElementById('station-selected').textContent = selectedText;
+            document.getElementById('site-selected').textContent = selectedText;
             
-            document.getElementById('station-dropdown-menu').classList.remove('show');
-            document.querySelector('#station-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
+            document.getElementById('site-dropdown-menu').classList.remove('show');
+            document.querySelector('#site-dropdown-btn .dropdown-arrow').style.transform = 'rotate(0deg)';
             
-            const stationId = this.getAttribute('data-station');
-            showStationView(stationId);
+            const siteId = this.getAttribute('data-site');
+            showSiteView(siteId);
         });
     });
 
-    function showStationView(stationId) {
+    function showSiteView(siteId) {
         const generalView = document.getElementById('general-view');
-        const stationView = document.getElementById('station-view');
+        const siteView = document.getElementById('site-view');
 
-        if (stationId === 'all') {
+        if (siteId === 'all') {
             generalView.style.display = 'block';
-            stationView.style.display = 'none';
+            siteView.style.display = 'none';
         } else {
             generalView.style.display = 'none';
-            stationView.style.display = 'block';
-            updateStationDetails(stationId);
+            siteView.style.display = 'block';
+            updateSiteDetails(siteId);
         }
     }
 
-    function updateStationDetails(stationName) {
+    function updateSiteDetails(siteName) {
         // Faire une requête AJAX pour récupérer les détails depuis MongoDB
-        fetch(`/dashboard/api/station-details/?station=${encodeURIComponent(stationName)}`)
+        fetch(`/dashboard/api/site-details/?site=${encodeURIComponent(siteName)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const station = data.data;
+                    const site = data.data;
                     
                     // Mettre à jour les informations
-                    document.getElementById('station-name').textContent = station.name;
-                    document.getElementById('station-province').textContent = station.province;
-                    document.getElementById('station-region').textContent = station.region;
-                    document.getElementById('station-snrt-rs').textContent = station.snrt_rs;
-                    document.getElementById('station-category').textContent = station.category;
-                    document.getElementById('station-gsm').textContent = station.gsm;
-                    document.getElementById('station-config-user').textContent = station.config_user;
-                    document.getElementById('station-latitude').textContent = station.latitude;
-                    document.getElementById('station-longitude').textContent = station.longitude;
-                    document.getElementById('station-altitude').textContent = `${station.altitude} m`;
-                    document.getElementById('station-code').textContent = station.code;
-                    document.getElementById('station-creation-date').textContent = station.creation_date;
-                    document.getElementById('station-creator').textContent = station.config_user;
+                    document.getElementById('site-name').textContent = site.name;
+                    document.getElementById('site-province').textContent = site.province;
+                    document.getElementById('site-region').textContent = site.region;
+                    document.getElementById('site-snrt-rs').textContent = site.snrt_rs;
+                    document.getElementById('site-category').textContent = site.category;
+                    document.getElementById('site-gsm').textContent = site.gsm;
+                    document.getElementById('site-config-user').textContent = site.config_user;
+                    document.getElementById('site-latitude').textContent = site.latitude;
+                    document.getElementById('site-longitude').textContent = site.longitude;
+                    document.getElementById('site-altitude').textContent = `${site.altitude} m`;
+                    document.getElementById('site-code').textContent = site.code;
+                    document.getElementById('site-creation-date').textContent = site.creation_date;
+                    document.getElementById('site-creator').textContent = site.config_user;
 
                     // Créer les graphiques
-                    createStationServicesChart(station.services);
-                    createStationControlChart(station.control);
+                    createSiteServicesChart(site.services);
+                    createSiteControlChart(site.control);
                 } else {
                     console.error('Erreur lors de la récupération des détails:', data.error);
-                    alert('Station non trouvée dans la base de données MongoDB');
+                    alert('Site non trouvé dans la base de données MongoDB');
                 }
             })
             .catch(error => {
@@ -326,8 +317,8 @@
             });
     }
 
-    function createStationServicesChart(services) {
-        const ctx = document.getElementById('stationServicesChart');
+    function createSiteServicesChart(services) {
+        const ctx = document.getElementById('siteServicesChart');
         if (ctx.chart) {
             ctx.chart.destroy();
         }
@@ -373,8 +364,8 @@
         });
     }
 
-    function createStationControlChart(controlStatus) {
-        const ctx = document.getElementById('stationControlChart');
+    function createSiteControlChart(controlStatus) {
+        const ctx = document.getElementById('siteControlChart');
         if (ctx.chart) {
             ctx.chart.destroy();
         }
@@ -414,32 +405,43 @@
 
     // Créer les graphiques avec les données MongoDB
     if (mongoData.connected && mongoData.regions.regions.length > 0) {
-        // 1. Graphique Régions SNRT (données réelles)
-        const regionCtx = document.getElementById('regionChart').getContext('2d');
-        new Chart(regionCtx, {
-            type: 'doughnut',
-            data: {
-                labels: mongoData.regions.regions,
-                datasets: [{
-                    data: mongoData.regions.counts,
-                    backgroundColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4', '#f72585', '#4cc9f0'],
-                    borderColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4', '#f72585', '#4cc9f0'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#e0e0e0' }
-                    }
-                }
-            }
-        });
+// 1. Graphique Régions SNRT avec couleurs distinctes
+const regionCtx = document.getElementById('regionChart').getContext('2d');
 
-        // 2. Graphique Services (données réelles)
+// Nombre de régions
+const regionCount = mongoData.regions.regions.length;
+
+// Génération de couleurs distinctes avec HSL (teintes espacées régulièrement)
+let distinctColors = [];
+for (let i = 0; i < regionCount; i++) {
+    const hue = Math.floor((360 / regionCount) * i); // Répartition régulière sur le cercle chromatique
+    distinctColors.push(`hsl(${hue}, 70%, 50%)`);
+}
+
+new Chart(regionCtx, {
+    type: 'doughnut',
+    data: {
+        labels: mongoData.regions.regions,
+        datasets: [{
+            data: mongoData.regions.counts,
+            backgroundColor: distinctColors,
+            borderColor: distinctColors,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: '#e0e0e0' }
+            }
+        }
+    }
+});
+
+        // 2. Graphique Services en Bar Chart
         const servicesCtx = document.getElementById('servicesChart').getContext('2d');
         new Chart(servicesCtx, {
             type: 'bar',
@@ -448,8 +450,8 @@
                 datasets: [{
                     label: 'Nombre de Services',
                     data: mongoData.services.counts,
-                    backgroundColor: mongoData.services.services.map(service => serviceColors[service] || '#667eea'),
-                    borderColor: mongoData.services.services.map(service => serviceColors[service] || '#667eea'),
+                    backgroundColor: mongoData.services.colors,
+                    borderColor: mongoData.services.colors,
                     borderWidth: 1
                 }]
             },
@@ -473,55 +475,33 @@
             }
         });
 
-        // 3. Graphique ConfigUser (données réelles)
-        const configUserCtx = document.getElementById('configUserChart').getContext('2d');
-        new Chart(configUserCtx, {
-            type: 'pie',
-            data: {
-                labels: mongoData.configUsers.users,
-                datasets: [{
-                    data: mongoData.configUsers.counts,
-                    backgroundColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4'],
-                    borderColor: ['#ff6b6b', '#ffa500', '#667eea', '#764ba2', '#48cae4'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#e0e0e0' }
-                    }
-                }
-            }
-        });
-
-        // 4. Graphique Catégories (données réelles)
+        // 3. Graphique Catégories en Bar Chart
         const categoryCtx = document.getElementById('categoryChart').getContext('2d');
         new Chart(categoryCtx, {
-            type: 'polarArea',
+            type: 'bar',
             data: {
                 labels: mongoData.categories.categories,
                 datasets: [{
+                    label: 'Nombre par Catégorie',
                     data: mongoData.categories.counts,
-                    backgroundColor: ['rgba(255, 107, 107, 0.8)', 'rgba(255, 165, 0, 0.8)', 'rgba(102, 126, 234, 0.8)'],
-                    borderColor: ['#ff6b6b', '#ffa500', '#667eea'],
-                    borderWidth: 2
+                    backgroundColor: mongoData.categories.colors,
+                    borderColor: mongoData.categories.colors,
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#e0e0e0' }
-                    }
+                    legend: { display: false }
                 },
                 scales: {
-                    r: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
                         ticks: { color: '#e0e0e0' },
                         grid: { color: 'rgba(255, 255, 255, 0.1)' }
                     }
@@ -529,21 +509,13 @@
             }
         });
 
-        // 5. Graphique Services par Région (données réelles)
+        // 4. Graphique Services par Région en Bar Chart
         const servicesRegionCtx = document.getElementById('servicesRegionChart').getContext('2d');
-        const datasets = mongoData.servicesByRegion.datasets.map(dataset => ({
-            label: dataset.label,
-            data: dataset.data,
-            borderColor: serviceColors[dataset.label] || '#667eea',
-            backgroundColor: (serviceColors[dataset.label] || '#667eea') + '20',
-            tension: 0.4
-        }));
-
         new Chart(servicesRegionCtx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: mongoData.servicesByRegion.regions,
-                datasets: datasets
+                datasets: mongoData.servicesByRegion.datasets
             },
             options: {
                 responsive: true,
@@ -744,11 +716,11 @@
         color: white;
     }
 
-    .station-info-container {
+    .site-info-container {
         margin-bottom: 30px;
     }
     
-    .station-info-card {
+    .site-info-card {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(10px);
         border-radius: 20px;
@@ -758,7 +730,7 @@
         margin: 0 auto;
     }
     
-    .station-info-card h2 {
+    .site-info-card h2 {
         color: white;
         font-size: 2.2rem;
         margin-bottom: 25px;
@@ -766,7 +738,7 @@
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     
-    .station-details {
+    .site-details {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 15px;
