@@ -127,16 +127,16 @@ def get_region_distribution():
         
         # Couleurs spécifiques pour chaque région
         region_colors = {
-            'Agadir': '#ff6b6b',      # Rouge
-            'Casablanca': '#4ecdc4',  # Turquoise
-            'Rabat': '#45b7d1',       # Bleu
-            'Fes': '#96ceb4',         # Vert
-            'Marrakech': '#ffeaa7',   # Jaune
-            'Oujda': '#a29bfe',       # Violet
-            'Tanger': '#fd79a8',      # Rose
-            'Laayoune': '#fdcb6e',    # Orange
-            'Meknes': '#6c5ce7',      # Indigo
-            'Taza': '#fd79a8'         # Rose clair
+            'Agadir': '#ff6b6b',
+            'Casablanca': '#4ecdc4',
+            'Rabat': '#45b7d1',
+            'Fes': '#96ceb4',
+            'Marrakech': '#ffeaa7',
+            'Oujda': '#a29bfe',
+            'Tanger': '#fd79a8',
+            'Laayoune': '#fdcb6e',
+            'Meknes': '#6c5ce7',
+            'Taza': '#fd79a8'
         }
         
         # Assigner les couleurs ou couleur par défaut
@@ -304,6 +304,97 @@ def get_services_by_region():
     except Exception as e:
         logger.error(f"Erreur services by region: {e}")
         return {'regions': [], 'datasets': []}
+
+def get_stations_by_site():
+    """NOUVEAU: Récupère les stations par site avec leurs services (comme demandé)"""
+    try:
+        # Récupérer les données des nouvelles collections
+        material_station_sites = snrt_service.get_collection_data('material station site')
+        staff_sites = snrt_service.get_collection_data('staff site')
+        
+        if not material_station_sites or not staff_sites:
+            return {'sites': [], 'datasets': []}
+        
+        # Créer un mapping site_id -> site_name depuis staff site
+        site_mapping = {}
+        for site in staff_sites:
+            site_id = site.get('_id')
+            site_name = site.get('Site', f'Site {site_id}')
+            if site_id:
+                site_mapping[str(site_id)] = {
+                    'name': site_name,
+                    'services': {
+                        'TNT': site.get('TNT', False),
+                        'FM': site.get('FM', False),
+                        'AM': site.get('AM', False),
+                        'FH': site.get('FH', False),
+                        'ST': site.get('ST', False),
+                        'Administration': site.get('Administration', False)
+                    }
+                }
+        
+        # Compter les stations par site depuis material station site
+        site_station_count = defaultdict(int)
+        for station_site in material_station_sites:
+            site_id = str(station_site.get('site_id', ''))
+            if site_id in site_mapping:
+                site_station_count[site_id] += 1
+        
+        # Organiser les données par site avec services
+        sites_data = {}
+        service_colors = {
+            'TNT': '#ff4757',
+            'FM': '#2ed573',
+            'AM': '#ffa502',
+            'Administration': '#3742fa',
+            'FH': '#8c7ae6',
+            'ST': '#ff6b6b'
+        }
+        
+        for site_id, station_count in site_station_count.items():
+            if site_id in site_mapping:
+                site_info = site_mapping[site_id]
+                site_name = site_info['name']
+                services = site_info['services']
+                
+                # Pour chaque service actif, ajouter le nombre de stations
+                sites_data[site_name] = {}
+                for service, is_active in services.items():
+                    if is_active:
+                        sites_data[site_name][service] = station_count
+                    else:
+                        sites_data[site_name][service] = 0
+        
+        # Préparer les données pour le graphique
+        sites = list(sites_data.keys())
+        datasets = []
+        
+        # Créer un dataset pour chaque service
+        service_types = ['TNT', 'FM', 'AM', 'FH', 'ST', 'Administration']
+        
+        for service in service_types:
+            data = []
+            for site in sites:
+                data.append(sites_data[site].get(service, 0))
+            
+            # Ne garder que les services qui ont au moins une occurrence
+            if sum(data) > 0:
+                datasets.append({
+                    'label': service,
+                    'data': data,
+                    'backgroundColor': service_colors.get(service, '#95a5a6'),
+                    'borderColor': service_colors.get(service, '#95a5a6'),
+                    'borderWidth': 1
+                })
+        
+        return {
+            'sites': sites,
+            'datasets': datasets
+        }
+        
+    except Exception as e:
+        logger.error(f"Erreur stations by site: {e}")
+        return {'sites': [], 'datasets': []}
 
 def get_site_details(site_name):
     """Récupère les détails d'un site spécifique par son nom"""

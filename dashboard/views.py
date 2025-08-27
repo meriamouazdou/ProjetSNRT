@@ -10,6 +10,7 @@ from .services import (
     get_site_details,
     get_category_distribution,
     get_services_by_region,
+    get_stations_by_site,  # NOUVEAU
     get_all_site_names,
     snrt_service
 )
@@ -25,6 +26,7 @@ def dashboard_view(request):
         services_data = get_services_distribution()
         category_data = get_category_distribution()
         services_by_region_data = get_services_by_region()
+        stations_by_site_data = get_stations_by_site()  # NOUVEAU
         site_names = get_all_site_names()
         
         # Préparer le contexte avec UNIQUEMENT les données MongoDB
@@ -34,6 +36,7 @@ def dashboard_view(request):
             'services_data': services_data,
             'category_data': category_data,
             'services_by_region_data': services_by_region_data,
+            'stations_by_site_data': stations_by_site_data,  # NOUVEAU
             'site_names': site_names,
             'mongodb_connected': True
         }
@@ -58,6 +61,7 @@ def dashboard_view(request):
             'services_data': {'services': [], 'counts': [], 'colors': []},
             'category_data': {'categories': [], 'counts': [], 'colors': []},
             'services_by_region_data': {'regions': [], 'datasets': []},
+            'stations_by_site_data': {'sites': [], 'datasets': []},  # NOUVEAU
             'site_names': []
         }
         return render(request, 'dashboard/tableau.html', context)
@@ -76,6 +80,8 @@ def chart_data_api(request):
             data = get_category_distribution()
         elif chart_type == 'services_by_region':
             data = get_services_by_region()
+        elif chart_type == 'stations_by_site':  # NOUVEAU
+            data = get_stations_by_site()
         elif chart_type == 'stats':
             data = get_dashboard_stats()
         else:
@@ -134,6 +140,7 @@ def refresh_data_api(request):
             'services': get_services_distribution(),
             'categories': get_category_distribution(),
             'services_by_region': get_services_by_region(),
+            'stations_by_site': get_stations_by_site(),  # NOUVEAU
             'site_names': get_all_site_names()
         }
         
@@ -188,7 +195,8 @@ def mongodb_test_view(request):
             'stats': get_dashboard_stats(),
             'regions_count': len(get_region_distribution()['regions']),
             'services_count': len(get_services_distribution()['services']),
-            'categories_count': len(get_category_distribution()['categories'])
+            'categories_count': len(get_category_distribution()['categories']),
+            'stations_by_site_count': len(get_stations_by_site()['sites'])  # NOUVEAU
         }
         
         client.close()

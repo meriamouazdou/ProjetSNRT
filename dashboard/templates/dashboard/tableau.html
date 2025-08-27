@@ -78,33 +78,43 @@
 
             <!-- Diagrammes avec données MongoDB -->
             <div class="charts-container">
-                <!-- Diagramme par Région SNRT avec couleurs spécifiques -->
+                <!-- Diagramme par Région AM avec couleurs spécifiques -->
                 <div class="chart-card">
-                    <h3>📊 Répartition par Région SNRT</h3>
+                    <h3>📊 Répartition par Région </h3>
                     <div class="chart-wrapper">
                         <canvas id="regionChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Diagramme Services -->
+                <!-- Diagramme Activité par Site -->
                 <div class="chart-card">
-                    <h3>📈 Services Installés par Type</h3>
+                    <h3>📈 Activité par Site</h3>
                     <div class="chart-wrapper">
                         <canvas id="servicesChart"></canvas>
                     </div>
                 </div>
-                
+
                 <!-- Diagramme Catégories en Bar Chart -->
                 <div class="chart-card">
-                    <h3>🔗 Répartition par Catégorie</h3>
+                    <h3>📗 Répartition par Catégorie</h3>
                     <div class="chart-wrapper">
                         <canvas id="categoryChart"></canvas>
                     </div>
                 </div>
                 
+                <!-- Diagramme Stations par Site -->
+                <div class="chart-card full-width">
+                    <h3>🗻 Stations par Site avec Services</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="stationsBySiteChart"></canvas>
+                    </div>
+                </div>
+                
+                
+                
                 <!-- Diagramme Services par Région en Bar Chart -->
                 <div class="chart-card full-width">
-                    <h3>📉 Services par Région SNRT</h3>
+                    <h3>📉 Services par Région </h3>
                     <div class="chart-wrapper">
                         <canvas id="servicesRegionChart"></canvas>
                     </div>
@@ -123,24 +133,12 @@
                             <span id="site-province">-</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">🗺️ Région:</span>
-                            <span id="site-region">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">🏢 SNRT RS:</span>
-                            <span id="site-snrt-rs">-</span>
+                            <span class="detail-label">🏢 Service Régional:</span>
+                            <span id="site-service-regional">-</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">📊 Catégorie:</span>
                             <span id="site-category">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">📞 GSM:</span>
-                            <span id="site-gsm">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">⚙️ Config User:</span>
-                            <span id="site-config-user">-</span>
                         </div>
                     </div>
                 </div>
@@ -165,11 +163,11 @@
                     <h3>🗺️ Position Géographique</h3>
                     <div class="geo-info">
                         <div class="geo-item">
-                            <span class="geo-label">🌐 Latitude:</span>
+                            <span class="geo-label">🌍 Latitude:</span>
                             <span id="site-latitude">-</span>
                         </div>
                         <div class="geo-item">
-                            <span class="geo-label">🌐 Longitude:</span>
+                            <span class="geo-label">🌍 Longitude:</span>
                             <span id="site-longitude">-</span>
                         </div>
                         <div class="geo-item">
@@ -179,20 +177,6 @@
                         <div class="geo-item">
                             <span class="geo-label">🏷️ Code:</span>
                             <span id="site-code">-</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="chart-card">
-                    <h3>📅 Informations de Création</h3>
-                    <div class="history-info">
-                        <div class="history-item">
-                            <span class="history-label">📅 Date de création:</span>
-                            <span id="site-creation-date">-</span>
-                        </div>
-                        <div class="history-item">
-                            <span class="history-label">👤 Créé par:</span>
-                            <span id="site-creator">-</span>
                         </div>
                     </div>
                 </div>
@@ -210,7 +194,7 @@
         'FM': '#2ed573',
         'AM': '#ffa502',
         'Administration': '#3742fa',
-        'FH': '#8c7ae6',
+        'FH': 'cayen',
         'ST': '#ff6b6b'
     };
 
@@ -228,6 +212,7 @@
         services: {{ services_data|safe }},
         categories: {{ category_data|safe }},
         servicesByRegion: {{ services_by_region_data|safe }},
+        stationsBySite: {{ stations_by_site_data|safe }},
         connected: {{ mongodb_connected|yesno:"true,false" }}
     };
 
@@ -288,20 +273,15 @@
                 if (data.success) {
                     const site = data.data;
                     
-                    // Mettre à jour les informations
+                    // Mettre à jour les informations (suppression des champs demandés)
                     document.getElementById('site-name').textContent = site.name;
                     document.getElementById('site-province').textContent = site.province;
-                    document.getElementById('site-region').textContent = site.region;
-                    document.getElementById('site-snrt-rs').textContent = site.snrt_rs;
+                    document.getElementById('site-service-regional').textContent = site.snrt_rs; // Changement du nom
                     document.getElementById('site-category').textContent = site.category;
-                    document.getElementById('site-gsm').textContent = site.gsm;
-                    document.getElementById('site-config-user').textContent = site.config_user;
                     document.getElementById('site-latitude').textContent = site.latitude;
                     document.getElementById('site-longitude').textContent = site.longitude;
                     document.getElementById('site-altitude').textContent = `${site.altitude} m`;
                     document.getElementById('site-code').textContent = site.code;
-                    document.getElementById('site-creation-date').textContent = site.creation_date;
-                    document.getElementById('site-creator').textContent = site.config_user;
 
                     // Créer les graphiques
                     createSiteServicesChart(site.services);
@@ -405,50 +385,46 @@
 
     // Créer les graphiques avec les données MongoDB
     if (mongoData.connected && mongoData.regions.regions.length > 0) {
-// 1. Graphique Régions SNRT avec couleurs distinctes
-const regionCtx = document.getElementById('regionChart').getContext('2d');
-
-// Nombre de régions
-const regionCount = mongoData.regions.regions.length;
-
-// Génération de couleurs distinctes avec HSL (teintes espacées régulièrement)
-let distinctColors = [];
-for (let i = 0; i < regionCount; i++) {
-    const hue = Math.floor((360 / regionCount) * i); // Répartition régulière sur le cercle chromatique
-    distinctColors.push(`hsl(${hue}, 70%, 50%)`);
-}
-
-new Chart(regionCtx, {
-    type: 'doughnut',
-    data: {
-        labels: mongoData.regions.regions,
-        datasets: [{
-            data: mongoData.regions.counts,
-            backgroundColor: distinctColors,
-            borderColor: distinctColors,
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom',
-                labels: { color: '#e0e0e0' }
-            }
+        // 1. Graphique Régions AM avec couleurs distinctes
+        const regionCtx = document.getElementById('regionChart').getContext('2d');
+        const regionCount = mongoData.regions.regions.length;
+        let distinctColors = [];
+        for (let i = 0; i < regionCount; i++) {
+            const hue = Math.floor((360 / regionCount) * i);
+            distinctColors.push(`hsl(${hue}, 70%, 50%)`);
         }
-    }
-});
 
-        // 2. Graphique Services en Bar Chart
+        new Chart(regionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: mongoData.regions.regions,
+                datasets: [{
+                    data: mongoData.regions.counts,
+                    backgroundColor: distinctColors,
+                    borderColor: distinctColors,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#e0e0e0' }
+                    }
+                }
+            }
+        });
+
+        // 2. Graphique Activité par Site en Bar Chart (taille complète)
         const servicesCtx = document.getElementById('servicesChart').getContext('2d');
         new Chart(servicesCtx, {
             type: 'bar',
             data: {
                 labels: mongoData.services.services,
                 datasets: [{
-                    label: 'Nombre de Services',
+                    label: 'Activité par Site',
                     data: mongoData.services.counts,
                     backgroundColor: mongoData.services.colors,
                     borderColor: mongoData.services.colors,
@@ -475,7 +451,61 @@ new Chart(regionCtx, {
             }
         });
 
-        // 3. Graphique Catégories en Bar Chart
+        // 3. Graphique Stations par Site
+        const stationsBySiteCtx = document.getElementById('stationsBySiteChart').getContext('2d');
+        new Chart(stationsBySiteCtx, {
+            type: 'bar',
+            data: {
+                labels: mongoData.stationsBySite.sites,
+                datasets: mongoData.stationsBySite.datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#e0e0e0' }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return `Site: ${context[0].label}`;
+                            },
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y} station(s)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { 
+                            color: '#e0e0e0',
+                            maxRotation: 45
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: { 
+                            color: '#e0e0e0',
+                            stepSize: 1
+                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        title: {
+                            display: true,
+                            text: 'Nombre de Stations',
+                            color: '#e0e0e0'
+                        }
+                    }
+                }
+            }
+        });
+
+        // 4. Graphique Catégories en Bar Chart
         const categoryCtx = document.getElementById('categoryChart').getContext('2d');
         new Chart(categoryCtx, {
             type: 'bar',
@@ -509,7 +539,7 @@ new Chart(regionCtx, {
             }
         });
 
-        // 4. Graphique Services par Région en Bar Chart
+        // 5. Graphique Services par Région AM en Bar Chart
         const servicesRegionCtx = document.getElementById('servicesRegionChart').getContext('2d');
         new Chart(servicesRegionCtx, {
             type: 'bar',
@@ -540,7 +570,6 @@ new Chart(regionCtx, {
             }
         });
     } else {
-        // Afficher un message si pas de données
         console.warn('Aucune donnée MongoDB disponible pour les graphiques');
     }
 </script>
