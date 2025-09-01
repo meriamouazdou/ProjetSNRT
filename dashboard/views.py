@@ -10,7 +10,10 @@ from .services import (
     get_site_details,
     get_category_distribution,
     get_services_by_region,
-    get_stations_by_site,  # NOUVEAU
+    get_stations_by_site,
+    get_tnt_subfamilies_distribution,
+    get_fm_subfamilies_distribution,
+    get_energie_subfamilies_distribution,
     get_all_site_names,
     snrt_service
 )
@@ -18,36 +21,45 @@ from .services import (
 logger = logging.getLogger(__name__)
 
 def dashboard_view(request):
-    """Vue principale du dashboard avec données MongoDB réelles"""
     try:
-        # Récupérer toutes les données réelles de MongoDB
         stats = get_dashboard_stats()
         region_data = get_region_distribution()
         services_data = get_services_distribution()
         category_data = get_category_distribution()
         services_by_region_data = get_services_by_region()
-        stations_by_site_data = get_stations_by_site()  # NOUVEAU
+        stations_by_site_data = get_stations_by_site()
+        tnt_subfamilies_data = get_tnt_subfamilies_distribution()
+        fm_subfamilies_data = get_fm_subfamilies_distribution()
+        energie_subfamilies_data = get_energie_subfamilies_distribution()
         site_names = get_all_site_names()
         
-        # Préparer le contexte avec UNIQUEMENT les données MongoDB
+        logger.info(f"TNT Subfamilies Data: {tnt_subfamilies_data}")
+        logger.info(f"FM Subfamilies Data: {fm_subfamilies_data}")
+        logger.info(f"Energie Subfamilies Data: {energie_subfamilies_data}")
+        
         context = {
             'stats': stats,
             'regions_data': region_data,
             'services_data': services_data,
             'category_data': category_data,
             'services_by_region_data': services_by_region_data,
-            'stations_by_site_data': stations_by_site_data,  # NOUVEAU
+            'stations_by_site_data': stations_by_site_data,
+            'tnt_subfamilies_data': tnt_subfamilies_data,
+            'fm_subfamilies_data': fm_subfamilies_data,
+            'energie_subfamilies_data': energie_subfamilies_data,
             'site_names': site_names,
             'mongodb_connected': True
         }
         
         logger.info(f"Dashboard chargé avec {stats['total_sites']} sites depuis MongoDB")
+        logger.info(f"Sous-familles TNT: {len(tnt_subfamilies_data.get('subfamilies', []))}")
+        logger.info(f"Sous-familles FM: {len(fm_subfamilies_data.get('subfamilies', []))}")
+        logger.info(f"Sous-familles Énergie: {len(energie_subfamilies_data.get('subfamilies', []))}")
         
         return render(request, 'dashboard/tableau.html', context)
         
     except Exception as e:
         logger.error(f"Erreur dans dashboard_view: {e}")
-        # En cas d'erreur MongoDB, afficher un message d'erreur
         context = {
             'mongodb_connected': False,
             'error_message': f"Erreur de connexion à MongoDB: {str(e)}",
@@ -61,14 +73,16 @@ def dashboard_view(request):
             'services_data': {'services': [], 'counts': [], 'colors': []},
             'category_data': {'categories': [], 'counts': [], 'colors': []},
             'services_by_region_data': {'regions': [], 'datasets': []},
-            'stations_by_site_data': {'sites': [], 'datasets': []},  # NOUVEAU
+            'stations_by_site_data': {'sites': [], 'datasets': []},
+            'tnt_subfamilies_data': {'subfamilies': [], 'counts': [], 'colors': [], 'labels': []},
+            'fm_subfamilies_data': {'subfamilies': [], 'counts': [], 'colors': [], 'labels': []},
+            'energie_subfamilies_data': {'subfamilies': [], 'counts': [], 'colors': [], 'labels': []},
             'site_names': []
         }
         return render(request, 'dashboard/tableau.html', context)
 
 @csrf_exempt
 def chart_data_api(request):
-    """API pour fournir les données des graphiques en JSON (données réelles MongoDB)"""
     try:
         chart_type = request.GET.get('type', 'regions')
         
@@ -80,8 +94,17 @@ def chart_data_api(request):
             data = get_category_distribution()
         elif chart_type == 'services_by_region':
             data = get_services_by_region()
-        elif chart_type == 'stations_by_site':  # NOUVEAU
+        elif chart_type == 'stations_by_site':
             data = get_stations_by_site()
+        elif chart_type == 'tnt_subfamilies':
+            data = get_tnt_subfamilies_distribution()
+            logger.info(f"API TNT Subfamilies appelée, données: {data}")
+        elif chart_type == 'fm_subfamilies':
+            data = get_fm_subfamilies_distribution()
+            logger.info(f"API FM Subfamilies appelée, données: {data}")
+        elif chart_type == 'energie_subfamilies':
+            data = get_energie_subfamilies_distribution()
+            logger.info(f"API Energie Subfamilies appelée, données: {data}")
         elif chart_type == 'stats':
             data = get_dashboard_stats()
         else:
@@ -103,7 +126,6 @@ def chart_data_api(request):
 
 @csrf_exempt
 def site_details_api(request):
-    """API pour récupérer les détails d'un site (données réelles MongoDB)"""
     try:
         site_name = request.GET.get('site')
         if not site_name:
@@ -131,16 +153,17 @@ def site_details_api(request):
         }, status=500)
 
 def refresh_data_api(request):
-    """API pour rafraîchir toutes les données du dashboard"""
     try:
-        # Récupérer toutes les données fraîches
         data = {
             'stats': get_dashboard_stats(),
             'regions': get_region_distribution(),
             'services': get_services_distribution(),
             'categories': get_category_distribution(),
             'services_by_region': get_services_by_region(),
-            'stations_by_site': get_stations_by_site(),  # NOUVEAU
+            'stations_by_site': get_stations_by_site(),
+            'tnt_subfamilies': get_tnt_subfamilies_distribution(),
+            'fm_subfamilies': get_fm_subfamilies_distribution(),
+            'energie_subfamilies': get_energie_subfamilies_distribution(),
             'site_names': get_all_site_names()
         }
         
@@ -159,7 +182,6 @@ def refresh_data_api(request):
         }, status=500)
 
 def mongodb_test_view(request):
-    """Vue de test pour vérifier la connexion MongoDB et afficher des échantillons"""
     try:
         client = snrt_service.get_connection()
         if not client:
@@ -174,7 +196,6 @@ def mongodb_test_view(request):
         for name, collection_name in snrt_service.collections.items():
             try:
                 count = db[collection_name].count_documents({})
-                # Récupérer un échantillon
                 sample = list(db[collection_name].find().limit(1))
                 
                 collections_info[name] = {
@@ -190,13 +211,29 @@ def mongodb_test_view(request):
                     'status': 'error'
                 }
         
-        # Tester les fonctions de données
+        tnt_data = get_tnt_subfamilies_distribution()
+        fm_data = get_fm_subfamilies_distribution()
+        energie_data = get_energie_subfamilies_distribution()
+        
+        logger.info(f"Test TNT subfamilies data: {tnt_data}")
+        logger.info(f"Test FM subfamilies data: {fm_data}")
+        logger.info(f"Test Energie subfamilies data: {energie_data}")
+        
         test_data = {
             'stats': get_dashboard_stats(),
             'regions_count': len(get_region_distribution()['regions']),
             'services_count': len(get_services_distribution()['services']),
             'categories_count': len(get_category_distribution()['categories']),
-            'stations_by_site_count': len(get_stations_by_site()['sites'])  # NOUVEAU
+            'stations_by_site_count': len(get_stations_by_site()['sites']),
+            'tnt_subfamilies_count': len(tnt_data.get('subfamilies', [])),
+            'tnt_subfamilies_total_stations': tnt_data.get('total_stations', 0),
+            'fm_subfamilies_count': len(fm_data.get('subfamilies', [])),
+            'fm_subfamilies_total_stations': fm_data.get('total_stations', 0),
+            'energie_subfamilies_count': len(energie_data.get('subfamilies', [])),
+            'energie_subfamilies_total_stations': energie_data.get('total_stations', 0),
+            'tnt_subfamilies_sample': tnt_data,
+            'fm_subfamilies_sample': fm_data,
+            'energie_subfamilies_sample': energie_data
         }
         
         client.close()
@@ -215,7 +252,6 @@ def mongodb_test_view(request):
         })
 
 def collection_data_view(request, collection_name):
-    """Vue pour afficher les données d'une collection spécifique avec pagination"""
     try:
         if collection_name not in snrt_service.collections.values():
             return JsonResponse({'error': 'Collection non trouvée'}, status=404)
@@ -223,11 +259,9 @@ def collection_data_view(request, collection_name):
         limit = int(request.GET.get('limit', 10))
         skip = int(request.GET.get('skip', 0))
         
-        # Récupérer les données avec pagination
         data = snrt_service.get_collection_data(collection_name, limit=limit)
-        total_count = len(data)  # Pour une vraie pagination, il faudrait count_documents()
+        total_count = len(data)
         
-        # Informations sur la structure
         sample_fields = []
         if data:
             sample_fields = list(data[0].keys())
@@ -249,7 +283,6 @@ def collection_data_view(request, collection_name):
         }, status=500)
 
 def sites_list_api(request):
-    """API pour récupérer la liste de tous les sites"""
     try:
         sites = get_all_site_names()
         

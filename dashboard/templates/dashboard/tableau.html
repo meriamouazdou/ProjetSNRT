@@ -22,7 +22,6 @@
             </div>
         {% endif %}
         
-        <!-- Filtrage par site -->
         <div class="filter-container">
             <h2>🔍 Filtrage par Site</h2>
             <div class="dropdown-container">
@@ -39,9 +38,7 @@
             </div>
         </div>
         
-        <!-- Vue générale -->
         <div id="general-view">
-            <!-- Statistiques rapides depuis MongoDB -->
             <div class="stats-container">
                 <div class="stat-card">
                     <div class="stat-icon">🗼</div>
@@ -54,7 +51,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">📡</div>
                     <div class="stat-info">
-                        <h3>Services TNT</h3>
+                        <h3>Station TNT</h3>
                         <p class="stat-number">{{ stats.services_tnt }}</p>
                     </div>
                 </div>
@@ -62,7 +59,7 @@
                 <div class="stat-card">
                     <div class="stat-icon">📻</div>
                     <div class="stat-info">
-                        <h3>Services FM</h3>
+                        <h3>Station FM</h3>
                         <p class="stat-number">{{ stats.services_fm }}</p>
                     </div>
                 </div>
@@ -76,9 +73,28 @@
                 </div>
             </div>
 
-            <!-- Diagrammes avec données MongoDB -->
             <div class="charts-container">
-                <!-- Diagramme par Région AM avec couleurs spécifiques -->
+                <div class="chart-card">
+                    <h3>📡 Répartition des Sous-Familles TNT</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="tntSubfamiliesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>📻 Répartition des Sous-Familles FM</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="fmSubfamiliesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <h3>⚡ Répartition des Sous-Familles Énergie</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="energieSubfamiliesChart"></canvas>
+                    </div>
+                </div>
+                
                 <div class="chart-card">
                     <h3>📊 Répartition par Région </h3>
                     <div class="chart-wrapper">
@@ -86,7 +102,6 @@
                     </div>
                 </div>
                 
-                <!-- Diagramme Activité par Site -->
                 <div class="chart-card">
                     <h3>📈 Activité par Site</h3>
                     <div class="chart-wrapper">
@@ -94,27 +109,22 @@
                     </div>
                 </div>
 
-                <!-- Diagramme Catégories en Bar Chart -->
                 <div class="chart-card">
-                    <h3>📗 Répartition par Catégorie</h3>
+                    <h3>🔗 Répartition par Catégorie</h3>
                     <div class="chart-wrapper">
                         <canvas id="categoryChart"></canvas>
                     </div>
                 </div>
                 
-                <!-- Diagramme Stations par Site -->
                 <div class="chart-card full-width">
-                    <h3>🗻 Stations par Site avec Services</h3>
+                    <h3>🗻 Stations par Site avec Station</h3>
                     <div class="chart-wrapper">
                         <canvas id="stationsBySiteChart"></canvas>
                     </div>
                 </div>
                 
-                
-                
-                <!-- Diagramme Services par Région en Bar Chart -->
                 <div class="chart-card full-width">
-                    <h3>📉 Services par Région </h3>
+                    <h3>📉 Station par Région </h3>
                     <div class="chart-wrapper">
                         <canvas id="servicesRegionChart"></canvas>
                     </div>
@@ -122,7 +132,6 @@
             </div>
         </div>
 
-        <!-- Vue site individuel -->
         <div id="site-view" style="display: none;">
             <div class="site-info-container">
                 <div class="site-info-card">
@@ -188,13 +197,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
 <script>
-    // Couleurs spécifiques pour chaque service
     const serviceColors = {
         'TNT': '#ff4757',
         'FM': '#2ed573',
         'AM': '#ffa502',
         'Administration': '#3742fa',
-        'FH': 'cayen',
+        'FH': '#8c7ae6',
         'ST': '#ff6b6b'
     };
 
@@ -205,7 +213,6 @@
         noControl: '#dc2626'
     };
 
-    // Données provenant de MongoDB (Django context)
     const mongoData = {
         stats: {{ stats|safe }},
         regions: {{ regions_data|safe }},
@@ -213,12 +220,14 @@
         categories: {{ category_data|safe }},
         servicesByRegion: {{ services_by_region_data|safe }},
         stationsBySite: {{ stations_by_site_data|safe }},
+        tntSubfamilies: {{ tnt_subfamilies_data|safe }},
+        fmSubfamilies: {{ fm_subfamilies_data|safe }},
+        energieSubfamilies: {{ energie_subfamilies_data|safe }},
         connected: {{ mongodb_connected|yesno:"true,false" }}
     };
 
     console.log('Données MongoDB chargées:', mongoData);
 
-    // Gestion du dropdown site
     document.getElementById('site-dropdown-btn').addEventListener('click', function() {
         const menu = document.getElementById('site-dropdown-menu');
         const arrow = this.querySelector('.dropdown-arrow');
@@ -234,7 +243,6 @@
         }
     });
 
-    // Filtrage par site
     document.querySelectorAll('#site-dropdown-menu .dropdown-item').forEach(item => {
         item.addEventListener('click', function() {
             document.querySelectorAll('#site-dropdown-menu .dropdown-item').forEach(i => i.classList.remove('active'));
@@ -266,24 +274,21 @@
     }
 
     function updateSiteDetails(siteName) {
-        // Faire une requête AJAX pour récupérer les détails depuis MongoDB
         fetch(`/dashboard/api/site-details/?site=${encodeURIComponent(siteName)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     const site = data.data;
                     
-                    // Mettre à jour les informations (suppression des champs demandés)
                     document.getElementById('site-name').textContent = site.name;
                     document.getElementById('site-province').textContent = site.province;
-                    document.getElementById('site-service-regional').textContent = site.snrt_rs; // Changement du nom
+                    document.getElementById('site-service-regional').textContent = site.snrt_rs;
                     document.getElementById('site-category').textContent = site.category;
                     document.getElementById('site-latitude').textContent = site.latitude;
                     document.getElementById('site-longitude').textContent = site.longitude;
                     document.getElementById('site-altitude').textContent = `${site.altitude} m`;
                     document.getElementById('site-code').textContent = site.code;
 
-                    // Créer les graphiques
                     createSiteServicesChart(site.services);
                     createSiteControlChart(site.control);
                 } else {
@@ -374,18 +379,112 @@
         });
     }
 
-    // Configuration par défaut des graphiques
+    function createSubfamilyChart(canvasId, data, title, fallbackMessage) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+
+        if (data && data.subfamilies && data.subfamilies.length > 0) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.subfamilies,
+                    datasets: [{
+                        data: data.counts,
+                        backgroundColor: data.colors,
+                        borderColor: data.colors,
+                        borderWidth: 2,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { 
+                                color: '#e0e0e0',
+                                font: { size: 11 },
+                                padding: 10,
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    return data.labels.map((label, i) => {
+                                        const value = data.datasets[0].data[i];
+                                        const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                                        return {
+                                            text: `${label}: ${value} (${percentage}%)`,
+                                            fillStyle: data.datasets[0].backgroundColor[i],
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    return `${title}: ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed / total) * 100).toFixed(1) : '0.0';
+                                    return `${context.parsed} stations (${percentage}%)`;
+                                },
+                                footer: function(context) {
+                                    const total = context[0].dataset.data.reduce((a, b) => a + b, 0);
+                                    return `Total stations: ${total}`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        animateRotate: true,
+                        animateScale: true,
+                        duration: 1200,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        } else {
+            ctx.style.display = 'flex';
+            ctx.style.alignItems = 'center';
+            ctx.style.justifyContent = 'center';
+            ctx.innerHTML = fallbackMessage;
+        }
+    }
+
     Chart.defaults.color = '#e0e0e0';
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
-    // Vérifier si MongoDB est connecté
     if (!mongoData.connected) {
         console.warn('MongoDB non connecté, impossibilité d\'afficher les données réelles');
     }
+    
+    mongoData.regions.regions = mongoData.regions.regions.map(r => {
+        if (!r || r.trim() === "-" || r.trim() === "") {
+            return "AM";
+        }
+        return r;
+    });
 
-    // Créer les graphiques avec les données MongoDB
     if (mongoData.connected && mongoData.regions.regions.length > 0) {
-        // 1. Graphique Régions AM avec couleurs distinctes
+        
+        createSubfamilyChart('tntSubfamiliesChart', mongoData.tntSubfamilies, 'Sous-famille TNT',
+            '<div style="color: #e0e0e0; text-align: center; padding: 30px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 10px;"><h4 style="margin-bottom: 10px;">⚠️ Aucune sous-famille TNT trouvée</h4><p>Vérifiez la configuration de la base de données</p></div>'
+        );
+
+        createSubfamilyChart('fmSubfamiliesChart', mongoData.fmSubfamilies, 'Sous-famille FM',
+            '<div style="color: #e0e0e0; text-align: center; padding: 30px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 10px;"><h4 style="margin-bottom: 10px;">⚠️ Aucune sous-famille FM trouvée</h4><p>Vérifiez la configuration de la base de données</p></div>'
+        );
+
+        createSubfamilyChart('energieSubfamiliesChart', mongoData.energieSubfamilies, 'Sous-famille Énergie',
+            '<div style="color: #e0e0e0; text-align: center; padding: 30px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 10px;"><h4 style="margin-bottom: 10px;">⚠️ Aucune sous-famille Énergie trouvée</h4><p>Vérifiez la configuration de la base de données</p></div>'
+        );
+        
         const regionCtx = document.getElementById('regionChart').getContext('2d');
         const regionCount = mongoData.regions.regions.length;
         let distinctColors = [];
@@ -417,7 +516,6 @@
             }
         });
 
-        // 2. Graphique Activité par Site en Bar Chart (taille complète)
         const servicesCtx = document.getElementById('servicesChart').getContext('2d');
         new Chart(servicesCtx, {
             type: 'bar',
@@ -451,7 +549,6 @@
             }
         });
 
-        // 3. Graphique Stations par Site
         const stationsBySiteCtx = document.getElementById('stationsBySiteChart').getContext('2d');
         new Chart(stationsBySiteCtx, {
             type: 'bar',
@@ -505,7 +602,6 @@
             }
         });
 
-        // 4. Graphique Catégories en Bar Chart
         const categoryCtx = document.getElementById('categoryChart').getContext('2d');
         new Chart(categoryCtx, {
             type: 'bar',
@@ -539,7 +635,6 @@
             }
         });
 
-        // 5. Graphique Services par Région AM en Bar Chart
         const servicesRegionCtx = document.getElementById('servicesRegionChart').getContext('2d');
         new Chart(servicesRegionCtx, {
             type: 'bar',
@@ -575,10 +670,13 @@
 </script>
 
 <style>
-    .container {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+   .container {
+    min-height: 100vh;
+    background: url("{% static 'images/background.jpg' %}") no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    z-index: 0;
+}
     
     .sidebar {
         position: fixed;
